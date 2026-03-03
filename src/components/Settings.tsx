@@ -145,16 +145,16 @@ export default function Settings({ onBack }: SettingsProps) {
         <button
           type="button"
           onClick={onBack}
-          className="text-sm text-gray-600 hover:text-gray-800"
+          className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
         >
           ← Back
         </button>
-        <h2 className="text-lg font-semibold text-gray-800">Settings</h2>
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Settings</h2>
         <span className="w-12" />
       </div>
 
       <section>
-        <h3 className="text-sm font-medium text-gray-700 mb-2">Accounts</h3>
+        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Accounts</h3>
         {accountsLoading ? (
           <p className="text-gray-500 text-sm">Loading…</p>
         ) : (
@@ -163,11 +163,11 @@ export default function Settings({ onBack }: SettingsProps) {
               {accounts.map((acc) => (
                 <li
                   key={acc.id}
-                  className="bg-white border border-gray-200 rounded-lg p-3 flex items-center justify-between"
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center justify-between"
                 >
                   <div>
-                    <span className="font-medium text-gray-800">{acc.name}</span>
-                    <span className="text-sm text-gray-500 ml-2">
+                    <span className="font-medium text-gray-800 dark:text-gray-200">{acc.name}</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
                       Initial: ${Number(acc.initial_balance).toFixed(2)}
                     </span>
                   </div>
@@ -202,17 +202,17 @@ export default function Settings({ onBack }: SettingsProps) {
       </section>
 
       <section>
-        <h3 className="text-sm font-medium text-gray-700 mb-2">Expense categories</h3>
+        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Expense categories</h3>
         <ul className="space-y-2 mb-3">
           {expenseCategories.map((c) => (
             <li
               key={c.id}
-              className="bg-white border border-gray-200 rounded-lg p-3 flex items-center justify-between"
-            >
-              <span className="text-gray-800">{c.name}</span>
-              <button
-                type="button"
-                onClick={() => handleDeleteExpenseCategory(c.id)}
+className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center justify-between"
+                >
+                  <span className="text-gray-800 dark:text-gray-200">{c.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteExpenseCategory(c.id)}
                 className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded text-sm"
               >
                 Delete
@@ -239,17 +239,17 @@ export default function Settings({ onBack }: SettingsProps) {
       </section>
 
       <section>
-        <h3 className="text-sm font-medium text-gray-700 mb-2">Income categories</h3>
+        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Income categories</h3>
         <ul className="space-y-2 mb-3">
           {incomeCategories.map((c) => (
             <li
               key={c.id}
-              className="bg-white border border-gray-200 rounded-lg p-3 flex items-center justify-between"
-            >
-              <span className="text-gray-800">{c.name}</span>
-              <button
-                type="button"
-                onClick={() => handleDeleteIncomeCategory(c.id)}
+className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center justify-between"
+                >
+                  <span className="text-gray-800 dark:text-gray-200">{c.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteIncomeCategory(c.id)}
                 className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded text-sm"
               >
                 Delete
@@ -275,41 +275,41 @@ export default function Settings({ onBack }: SettingsProps) {
         </div>
       </section>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {accountForm && (
         <div className="fixed inset-0 z-20 flex items-end sm:items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-xl p-4">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-xl p-4">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
               {accountForm === 'new' ? 'Add account' : 'Edit account'}
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
                 <input
                   type="text"
                   value={accountName}
                   onChange={(e) => setAccountName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-md"
                   placeholder="e.g. Checking"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Initial balance</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Initial balance</label>
                 <input
                   type="number"
                   step="0.01"
                   value={accountInitialBalance}
                   onChange={(e) => setAccountInitialBalance(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-md"
                 />
               </div>
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={closeAccountForm}
-                  className="flex-1 py-2 px-4 border border-gray-300 rounded-md text-gray-700"
+                  className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-200"
                 >
                   Cancel
                 </button>
