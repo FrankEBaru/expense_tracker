@@ -7,5 +7,5 @@ export const isSupabaseConfigured =
   !!supabaseUrl && !!supabaseAnonKey
 
 export const supabase: SupabaseClient = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl!, supabaseAnonKey!)
   : (null as unknown as SupabaseClient)

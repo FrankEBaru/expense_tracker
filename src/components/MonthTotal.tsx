@@ -32,10 +32,6 @@ export default function MonthTotal({ selectedMonth, onMonthChange }: MonthTotalP
     )
   }
 
-  const now = new Date()
-  const currentYm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  const isCurrentMonth = selectedMonth === currentYm
-
   return (
     <div className="mb-4">
       <div className="flex items-center justify-between gap-2 mb-2">
