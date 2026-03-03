@@ -1,21 +1,42 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Session } from '@supabase/supabase-js'
 import { supabase, isSupabaseConfigured } from './lib/supabase'
 import Auth from './components/Auth'
-import ExpenseList from './components/ExpenseList'
-import MonthTotal from './components/MonthTotal'
-import ExpenseForm from './components/ExpenseForm'
-import type { Expense } from './types/expense'
+import Dashboard from './components/Dashboard'
+import Settings from './components/Settings'
+import TransactionForm from './components/TransactionForm'
+import { useAccounts } from './hooks/useAccounts'
+import { useCategories } from './hooks/useCategories'
+import type { Transaction } from './types/transaction'
+import type { TransactionInsert } from './types/transaction'
+import type { TransactionUpdate } from './types/transaction'
+
+type View = 'dashboard' | 'settings'
 
 function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [view, setView] = useState<View>('dashboard')
   const [showForm, setShowForm] = useState(false)
-  const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date()
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  })
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+  const [txMutations, setTxMutations] = useState<{
+    addTransaction: (insert: TransactionInsert) => Promise<void>
+    updateTransaction: (id: string, update: TransactionUpdate) => Promise<void>
+  } | null>(null)
+
+  const { accounts, loading: accountsLoading, error: accountsError, refetch: refetchAccounts } = useAccounts()
+  const { categories: expenseCategories, refetch: refetchExpenseCategories } = useCategories('expense')
+  const { categories: incomeCategories, refetch: refetchIncomeCategories } = useCategories('income')
+
+  const prevViewRef = useRef<View>(view)
+  useEffect(() => {
+    if (prevViewRef.current === 'settings' && view === 'dashboard') {
+      refetchAccounts()
+      refetchExpenseCategories()
+      refetchIncomeCategories()
+    }
+    prevViewRef.current = view
+  }, [view, refetchAccounts, refetchExpenseCategories, refetchIncomeCategories])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -34,20 +55,28 @@ function App() {
     await supabase.auth.signOut()
   }
 
-  const openAddForm = () => {
-    setEditingExpense(null)
+  const openAddForm = useCallback(() => {
+    setEditingTransaction(null)
     setShowForm(true)
-  }
+  }, [])
 
-  const openEditForm = (expense: Expense) => {
-    setEditingExpense(expense)
+  const openEditForm = useCallback((tx: Transaction) => {
+    setEditingTransaction(tx)
     setShowForm(true)
-  }
+  }, [])
 
-  const closeForm = () => {
+  const closeForm = useCallback(() => {
     setShowForm(false)
-    setEditingExpense(null)
-  }
+    setEditingTransaction(null)
+  }, [])
+
+  const handleTransactionSaved = useCallback(() => {
+    refetchAccounts()
+    closeForm()
+  }, [refetchAccounts, closeForm])
+
+  const openSettings = useCallback(() => setView('settings'), [])
+  const closeSettings = useCallback(() => setView('dashboard'), [])
 
   if (!isSupabaseConfigured) {
     return (
@@ -80,7 +109,9 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-gray-800">Expenses</h1>
+        <h1 className="text-lg font-semibold text-gray-800">
+          {view === 'dashboard' ? 'Finance' : 'Settings'}
+        </h1>
         <button
           type="button"
           onClick={handleLogout}
@@ -91,30 +122,33 @@ function App() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-4">
-        <MonthTotal selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
-        <ExpenseList
-          selectedMonth={selectedMonth}
-          onEdit={openEditForm}
-        />
+        {view === 'dashboard' && (
+          <Dashboard
+            accounts={accounts}
+            accountsLoading={accountsLoading}
+            accountsError={accountsError}
+            onAddTransaction={openAddForm}
+            onOpenSettings={openSettings}
+            onEditTransaction={openEditForm}
+            onMutationsReady={setTxMutations}
+            onAccountsRefetch={refetchAccounts}
+          />
+        )}
+        {view === 'settings' && <Settings onBack={closeSettings} />}
       </main>
 
-      {showForm && (
-        <ExpenseForm
-          expense={editingExpense}
+      {showForm && txMutations && (
+        <TransactionForm
+          transaction={editingTransaction}
+          accounts={accounts}
+          expenseCategories={expenseCategories}
+          incomeCategories={incomeCategories}
           onClose={closeForm}
-          onSaved={closeForm}
+          onSaved={handleTransactionSaved}
+          addTransaction={txMutations.addTransaction}
+          updateTransaction={txMutations.updateTransaction}
         />
       )}
-
-      <div className="fixed bottom-6 left-0 right-0 max-w-2xl mx-auto px-4 flex justify-center pb-safe">
-        <button
-          type="button"
-          onClick={openAddForm}
-          className="py-3 px-6 bg-blue-600 text-white font-medium rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        >
-          Add expense
-        </button>
-      </div>
     </div>
   )
 }

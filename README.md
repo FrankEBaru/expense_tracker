@@ -1,6 +1,6 @@
-# Expense Tracker
+# Finance Tracker
 
-A minimal expense tracking web app for personal use. Built with React, Vite, Tailwind CSS, and Supabase. Single-user; syncs across devices after login.
+A personal finance web app: track income and expenses, multiple accounts, transfers, and custom categories. Built with React, Vite, Tailwind CSS, and Supabase. Single-user; syncs across devices after login.
 
 ## How to run the project
 
@@ -43,7 +43,7 @@ A minimal expense tracking web app for personal use. Built with React, Vite, Tai
    In **Authentication → Providers**, ensure **Email** is enabled (default). You can disable other providers if you only use email + password.
 
 4. **Run the database schema**  
-   In **SQL Editor**, run the contents of `supabase/schema.sql` (creates the `expenses` table and RLS policies). See that file in this repo.
+   In **SQL Editor**, run the contents of `supabase/migration_full_finance.sql`. It creates `accounts`, `categories`, and `transactions` (and migrates from the old `expenses` table if present). For a brand-new project with no existing data, the same file works and the app will create a default account and categories on first login.
 
 After that, use **Authentication → Users** to create a user (or sign up from the app).
 
@@ -89,12 +89,19 @@ git commit -m "Initial commit: expense tracker MVP"
 ```
 src/
 ├── main.tsx, App.tsx, index.css
-├── lib/supabase.ts       # Supabase client
-├── types/expense.ts      # Expense type and categories
+├── lib/supabase.ts         # Supabase client
+├── types/
+│   ├── account.ts         # Account types
+│   ├── category.ts        # Category types
+│   └── transaction.ts     # Transaction types
 ├── components/
-│   ├── Auth.tsx          # Login / sign up / logout
-│   ├── ExpenseList.tsx   # List and month filter
-│   ├── ExpenseForm.tsx   # Add / edit expense form
-│   └── MonthTotal.tsx    # Total for selected month
-└── hooks/useExpenses.ts  # Fetch and mutate expenses
+│   ├── Auth.tsx           # Login / sign up / logout
+│   ├── Dashboard.tsx      # Accounts, month summary, transaction list
+│   ├── TransactionList.tsx # List transactions with edit/delete
+│   ├── TransactionForm.tsx # Add/edit expense, income, or transfer
+│   └── Settings.tsx        # Accounts and categories CRUD
+└── hooks/
+    ├── useAccounts.ts     # Accounts with balance
+    ├── useCategories.ts   # Expense/income categories
+    └── useTransactions.ts # Transactions by month and account
 ```
