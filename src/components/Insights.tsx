@@ -952,7 +952,7 @@ function CategoryControlRow({
   categories: Category[]
   dropdownRef: React.RefObject<HTMLDivElement | null>
   openDropdown: boolean
-  setOpenDropdown: (v: boolean) => void
+  setOpenDropdown: (v: boolean | ((prev: boolean) => boolean)) => void
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -967,10 +967,10 @@ function CategoryControlRow({
         <option value={15}>Top 15</option>
         <option value={999}>All</option>
       </select>
-      <div className="relative" ref={dropdownRef}>
+      <div className="relative" ref={dropdownRef as React.RefObject<HTMLDivElement>}>
         <button
           type="button"
-          onClick={() => setOpenDropdown((o) => !o)}
+          onClick={() => setOpenDropdown((o: boolean) => !o)}
           className="min-h-[44px] px-2 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-700 dark:text-gray-200"
         >
           {selectedIds.length === 0 ? 'Select categories' : `${selectedIds.length} selected`} ▼
@@ -1003,7 +1003,7 @@ function CategoryControlRow({
 
 function CategoryOverTimeSection({
   title,
-  months,
+  months: _months,
   trendData,
   byMonthData,
   trendTopN,

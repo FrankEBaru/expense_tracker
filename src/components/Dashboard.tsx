@@ -85,7 +85,7 @@ interface DashboardProps {
   onError?: (message: string) => void
 }
 
-export default function Dashboard({ accounts, accountsLoading, accountsError, onAddTransaction, onOpenSettings, onEditTransaction, onMutationsReady, onAccountsRefetch, onError }: DashboardProps) {
+export default function Dashboard({ accounts, accountsLoading, accountsError, onAddTransaction: _onAddTransaction, onOpenSettings, onEditTransaction, onMutationsReady, onAccountsRefetch, onError }: DashboardProps) {
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
