@@ -3,7 +3,9 @@ import { useTransactionsRange } from '../hooks/useTransactionsRange'
 import { useAccounts } from '../hooks/useAccounts'
 import { useCategories } from '../hooks/useCategories'
 import { getCategoryColor } from '../constants/colors'
-import { CHART, CHART_TOOLTIP_CLASS, CHART_TOOLTIP_TITLE_CLASS, CHART_TOOLTIP_BODY_CLASS } from '../constants/chartConfig'
+import { CHART, CHART_TOOLTIP_BODY_CLASS } from '../constants/chartConfig'
+import { VerticalBarChart } from './VerticalBarChart'
+import { TrendLineChart } from './TrendLineChart'
 import type { Transaction } from '../types/transaction'
 import type { Category } from '../types/category'
 import type { Account } from '../types/account'
@@ -109,29 +111,6 @@ export default function Insights({ onBack }: InsightsProps) {
     const n = new Date()
     return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`
   })
-  const [hoveredNetWorthYm, setHoveredNetWorthYm] = useState<string | null>(null)
-  const [hoveredIncomeExpenseYm, setHoveredIncomeExpenseYm] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!hoveredIncomeExpenseYm) return
-    const onDocClick = () => {
-      setHoveredIncomeExpenseYm(null)
-      document.removeEventListener('click', onDocClick)
-    }
-    document.addEventListener('click', onDocClick)
-    return () => document.removeEventListener('click', onDocClick)
-  }, [hoveredIncomeExpenseYm])
-
-  useEffect(() => {
-    if (!hoveredNetWorthYm) return
-    const onDocClick = () => {
-      setHoveredNetWorthYm(null)
-      document.removeEventListener('click', onDocClick)
-    }
-    document.addEventListener('click', onDocClick)
-    return () => document.removeEventListener('click', onDocClick)
-  }, [hoveredNetWorthYm])
-
   const currentMonth = months[months.length - 1]
   const prevMonth = months[months.length - 2]
   const currentSummary = useMemo(
@@ -357,60 +336,31 @@ export default function Insights({ onBack }: InsightsProps) {
       {/* 2. Income vs expenses by month */}
       <section className="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 p-3">
         <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Income vs expenses by month</h3>
-        {incomeVsExpenseByMonth.every((m) => m.income === 0 && m.expenses === 0) ? (
-          <p className="text-xs text-gray-400 dark:text-gray-500">No data for this period.</p>
-        ) : (
-          <div className="relative space-y-2">
-            {hoveredIncomeExpenseYm && (() => {
-              const m = incomeVsExpenseByMonth.find((d) => d.ym === hoveredIncomeExpenseYm)
-              const idx = incomeVsExpenseByMonth.findIndex((d) => d.ym === hoveredIncomeExpenseYm)
-              if (!m || idx < 0) return null
-              const leftPct = ((idx + 0.5) / incomeVsExpenseByMonth.length) * 100
-              return (
-                <div
-                  className={CHART_TOOLTIP_CLASS}
-                  style={{ left: `${leftPct}%`, top: 0, transform: 'translateX(-50%)' }}
-                >
-                  <p className={CHART_TOOLTIP_TITLE_CLASS}>{m.label}</p>
-                  <p className="tabular-nums">Income: ${m.income.toFixed(2)}</p>
-                  <p className="tabular-nums">Expenses: ${m.expenses.toFixed(2)}</p>
-                </div>
-              )
-            })()}
-            <div className="flex w-full gap-1">
-              {incomeVsExpenseByMonth.map((m) => (
-                <div
-                  key={m.ym}
-                  className="flex min-w-0 flex-1 flex-col items-center"
-                  onMouseEnter={() => setHoveredIncomeExpenseYm(m.ym)}
-                  onMouseLeave={() => setHoveredIncomeExpenseYm(null)}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setHoveredIncomeExpenseYm(m.ym)
-                  }}
-                >
-                  <div className="w-full flex flex-col gap-0.5 h-24 justify-end">
-                    <div
-                      className="w-full bg-green-500 dark:bg-green-600 rounded-t min-h-[2px]"
-                      style={{ height: `${(m.income / maxIncomeExpense) * 100}%` }}
-                      title={`Income: $${m.income.toFixed(2)}`}
-                    />
-                    <div
-                      className="w-full bg-red-500 dark:bg-red-600 rounded-t min-h-[2px]"
-                      style={{ height: `${(m.expenses / maxIncomeExpense) * 100}%` }}
-                      title={`Expenses: $${m.expenses.toFixed(2)}`}
-                    />
-                  </div>
-                  <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 truncate max-w-full">{m.label}</span>
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-4 text-xs text-gray-500 dark:text-gray-400">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-green-500" /> Income</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-red-500" /> Expenses</span>
-            </div>
-          </div>
-        )}
+        <VerticalBarChart
+          data={incomeVsExpenseByMonth}
+          hasData={!incomeVsExpenseByMonth.every((m) => m.income === 0 && m.expenses === 0)}
+          emptyMessage="No data for this period."
+          getSegments={(m) => [
+            {
+              heightPct: maxIncomeExpense > 0 ? (m.income / maxIncomeExpense) * 100 : 0,
+              color: 'rgb(34, 197, 94)',
+            },
+            {
+              heightPct: maxIncomeExpense > 0 ? (m.expenses / maxIncomeExpense) * 100 : 0,
+              color: 'rgb(239, 68, 68)',
+            },
+          ]}
+          legendItems={[
+            { id: 'income', name: 'Income', color: 'rgb(34, 197, 94)' },
+            { id: 'expenses', name: 'Expenses', color: 'rgb(239, 68, 68)' },
+          ]}
+          renderTooltip={(m) => (
+            <>
+              <p className="tabular-nums">Income: ${m.income.toFixed(2)}</p>
+              <p className="tabular-nums">Expenses: ${m.expenses.toFixed(2)}</p>
+            </>
+          )}
+        />
       </section>
 
       {/* 3. Expenses by category over time */}
@@ -499,56 +449,16 @@ export default function Insights({ onBack }: InsightsProps) {
       {/* 6b. Net worth over time – By month */}
       <section className="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 p-3">
         <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Net worth over time – By month</h3>
-        {netWorthByMonth.every((m) => m.netWorth === 0) ? (
-          <p className="text-xs text-gray-400 dark:text-gray-500">No data for this period.</p>
-        ) : (
-          <div
-            className="relative min-w-0 w-full"
-            style={{
-              minHeight: CHART.barChart.barHeight + CHART.barChart.tooltipReserveHeight + 24,
-              marginTop: CHART.section.chartMarginTop,
-            }}
-          >
-            {hoveredNetWorthYm && (() => {
-              const m = netWorthByMonth.find((d) => d.ym === hoveredNetWorthYm)
-              const idx = netWorthByMonth.findIndex((d) => d.ym === hoveredNetWorthYm)
-              if (!m || idx < 0) return null
-              const leftPct = ((idx + 0.5) / netWorthByMonth.length) * 100
-              return (
-                <div
-                  className={CHART_TOOLTIP_CLASS}
-                  style={{ left: `${leftPct}%`, top: 0, transform: 'translateX(-50%)' }}
-                >
-                  <p className={CHART_TOOLTIP_TITLE_CLASS}>{m.label}</p>
-                  <p className="tabular-nums font-medium">${m.netWorth.toFixed(2)}</p>
-                </div>
-              )
-            })()}
-            <div
-              className="flex w-full gap-1 items-end"
-              style={{ marginTop: CHART.barChart.tooltipReserveHeight, height: CHART.barChart.barHeight, gap: CHART.barChart.gap }}
-            >
-              {netWorthByMonth.map((m) => (
-                <div
-                  key={m.ym}
-                  className="flex min-w-0 flex-1 flex-col items-center"
-                  onMouseEnter={() => setHoveredNetWorthYm(m.ym)}
-                  onMouseLeave={() => setHoveredNetWorthYm(null)}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setHoveredNetWorthYm(m.ym)
-                  }}
-                >
-                  <div
-                    className="w-full bg-blue-500 dark:bg-blue-600 rounded-t min-h-[4px]"
-                    style={{ height: `${netWorthRange === 0 ? 100 : ((m.netWorth - minNetWorth) / netWorthRange) * 100}%` }}
-                  />
-                  <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 truncate max-w-full">{m.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <VerticalBarChart
+          data={netWorthByMonth}
+          hasData={!netWorthByMonth.every((m) => m.netWorth === 0)}
+          emptyMessage="No data for this period."
+          getSegments={(m) => {
+            const barPct = netWorthRange === 0 ? 100 : ((m.netWorth - minNetWorth) / netWorthRange) * 100
+            return [{ heightPct: barPct, color: 'rgb(59, 130, 246)' }]
+          }}
+          renderTooltip={(m) => <p className="tabular-nums font-medium">${m.netWorth.toFixed(2)}</p>}
+        />
       </section>
     </div>
   )
@@ -565,373 +475,73 @@ function CategoryOverTimeLineChart({
   categories: Category[]
   maxVal: number
 }) {
-  const [hoverMonthIndex, setHoverMonthIndex] = useState<number | null>(null)
-  const [pinnedIndex, setPinnedIndex] = useState<number | null>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const { height, padding, minWidth, widthPerPoint, yTicks: yTicksCount, fontSize } = CHART.lineChart
-  const width = Math.max(minWidth, months.length * widthPerPoint)
-  const innerWidth = width - padding.left - padding.right
-  const innerHeight = height - padding.top - padding.bottom
-  const range = maxVal || 1
-  const tickValues: number[] = []
-  for (let i = 0; i <= yTicksCount; i++) {
-    tickValues.push((i / yTicksCount) * maxVal)
-  }
-  const categoryNames = new Map(categories.map((c) => [c.id, c.name]))
-  const showEveryNthLabel = months.length > 10 ? 2 : 1
-  const activeIndex = pinnedIndex ?? hoverMonthIndex
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const el = containerRef.current
-    if (!el || months.length === 0) return
-    const rect = el.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const fraction = rect.width > 0 ? x / rect.width : 0
-    const index = Math.min(months.length - 1, Math.max(0, Math.floor(fraction * months.length)))
-    setHoverMonthIndex(index)
-  }
-
-  const handleMouseLeave = () => setHoverMonthIndex(null)
-
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.stopPropagation()
-    const el = containerRef.current
-    if (!el || months.length === 0) return
-    const rect = el.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const fraction = rect.width > 0 ? x / rect.width : 0
-    const index = Math.min(months.length - 1, Math.max(0, Math.floor(fraction * months.length)))
-    setPinnedIndex(index)
-  }
-
-  useEffect(() => {
-    if (pinnedIndex === null) return
-    const onDocClick = () => {
-      setPinnedIndex(null)
-      document.removeEventListener('click', onDocClick)
-    }
-    document.addEventListener('click', onDocClick)
-    return () => document.removeEventListener('click', onDocClick)
-  }, [pinnedIndex])
-
+  const series = useMemo(
+    () =>
+      categoryIds.map((catId, idx) => ({
+        id: catId,
+        name: categories.find((c) => c.id === catId)?.name ?? catId,
+        color: getCategoryColor(catId, categories, idx),
+        values: months.map((m) => m.series.find((s) => s.id === catId)?.total ?? 0),
+      })),
+    [categoryIds, categories, months]
+  )
+  const data = useMemo(() => months.map((m) => ({ ym: m.ym, label: m.label })), [months])
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full min-h-0"
-      style={{ minHeight: height }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onClick={handleClick}
-    >
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="w-full block"
-        style={{ height, minHeight: height, maxWidth: '100%' }}
-        preserveAspectRatio="xMidYMid meet"
-      >
-        {/* Grid lines */}
-        {tickValues.slice(1, -1).map((v, i) => {
-          const y = padding.top + (1 - v / range) * innerHeight
-          return (
-            <line
-              key={i}
-              x1={padding.left}
-              y1={y}
-              x2={width - padding.right}
-              y2={y}
-              stroke="currentColor"
-              strokeOpacity={0.15}
-              strokeDasharray="2,2"
-              strokeWidth="1"
-            />
-          )
-        })}
-        {months.length > 1 &&
-          months.slice(1, -1).map((_, i) => {
-            const x = padding.left + ((i + 1) / (months.length - 1)) * innerWidth
-            return (
-              <line
-                key={i}
-                x1={x}
-                y1={padding.top}
-                x2={x}
-                y2={height - padding.bottom}
-                stroke="currentColor"
-                strokeOpacity={0.1}
-                strokeDasharray="2,2"
-                strokeWidth="1"
-              />
-            )
-          })}
-        {/* Y-axis labels */}
-        {tickValues.map((v, i) => {
-          const y = padding.top + (1 - v / range) * innerHeight
-          return (
-            <text
-              key={i}
-              x={padding.left - 8}
-              y={y + 4}
-              textAnchor="end"
-              className="fill-gray-500 dark:fill-gray-400"
-              fontSize={fontSize.axis}
-            >
-              ${v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v.toFixed(0)}
-            </text>
-          )
-        })}
-        {/* Lines */}
-        {categoryIds.map((catId, idx) => {
-          const points = months
-            .map((m, i) => {
-              const total = m.series.find((s) => s.id === catId)?.total ?? 0
-              const x = padding.left + (i / Math.max(1, months.length - 1)) * innerWidth
-              const y = padding.top + (1 - total / range) * innerHeight
-              return `${x},${y}`
+    <TrendLineChart
+      data={data}
+      series={series}
+      yMin={0}
+      yMax={maxVal || 1}
+      formatYTick={(v) => (v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v.toFixed(0))}
+      renderTooltip={(monthIndex) => (
+        <ul className={CHART_TOOLTIP_BODY_CLASS}>
+          {categoryIds
+            .map((catId, idx) => {
+              const name = categories.find((c) => c.id === catId)?.name ?? catId
+              const total = months[monthIndex].series.find((s) => s.id === catId)?.total ?? 0
+              return { catId, name, total, color: getCategoryColor(catId, categories, idx) }
             })
-            .join(' ')
-          const color = getCategoryColor(catId, categories, idx)
-          const name = categoryNames.get(catId) ?? catId
-          return (
-            <polyline
-              key={catId}
-              fill="none"
-              stroke={color}
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              points={points}
-              data-category-id={catId}
-              data-category-name={name}
-            >
-              <title>{name}</title>
-            </polyline>
-          )
-        })}
-        {/* X-axis month labels – show every Nth to avoid overlap */}
-        {months.map((m, i) => {
-          if (i % showEveryNthLabel !== 0) return null
-          const x = padding.left + (i / Math.max(1, months.length - 1)) * innerWidth
-          return (
-            <text
-              key={m.ym}
-              x={x}
-              y={height - 10}
-              textAnchor="middle"
-              className="fill-gray-500 dark:fill-gray-400"
-              fontSize={fontSize.label}
-            >
-              {m.label}
-            </text>
-          )
-        })}
-      </svg>
-      {/* Hover / tap tooltip */}
-      {activeIndex !== null && months[activeIndex] && (
-        <div
-          className={CHART_TOOLTIP_CLASS}
-          style={{ left: '50%', top: 8, transform: 'translateX(-50%)', maxWidth: 220 }}
-        >
-          <p className={CHART_TOOLTIP_TITLE_CLASS}>{months[activeIndex].label}</p>
-          <ul className={CHART_TOOLTIP_BODY_CLASS}>
-            {categoryIds
-              .map((catId, idx) => {
-                const name = categoryNames.get(catId) ?? catId
-                const total = months[activeIndex].series.find((s) => s.id === catId)?.total ?? 0
-                return { catId, name, total, color: getCategoryColor(catId, categories, idx) }
-              })
-              .filter((row) => row.total > 0)
-              .map((row) => (
-                <li key={row.catId} className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
-                  <span className="truncate min-w-0">{row.name}</span>
-                  <span className="tabular-nums shrink-0">${row.total.toFixed(2)}</span>
-                </li>
-              ))}
-          </ul>
-        </div>
+            .filter((row) => row.total > 0)
+            .map((row) => (
+              <li key={row.catId} className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
+                <span className="truncate min-w-0">{row.name}</span>
+                <span className="tabular-nums shrink-0">${row.total.toFixed(2)}</span>
+              </li>
+            ))}
+        </ul>
       )}
-      {/* Legend */}
-      <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-gray-600 dark:text-gray-400">
-        {categoryIds.map((catId, idx) => {
-          const name = categoryNames.get(catId) ?? catId
-          const color = getCategoryColor(catId, categories, idx)
-          return (
-            <span key={catId} className="flex items-center gap-1.5">
-              <span
-                className="w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: color }}
-                aria-hidden
-              />
-              <span className="truncate max-w-[120px]" title={name}>{name}</span>
-            </span>
-          )
-        })}
-      </div>
-    </div>
+      showLegend
+    />
   )
 }
 
 function NetWorthLineChart({ data }: { data: { ym: string; label: string; netWorth: number }[] }) {
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null)
-  const [pinnedIndex, setPinnedIndex] = useState<number | null>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const { height, padding, minWidth, widthPerPoint, yTicks: yTicksCount, fontSize } = CHART.lineChart
-  const width = Math.max(minWidth, data.length * widthPerPoint)
-  const innerWidth = width - padding.left - padding.right
-  const innerHeight = height - padding.top - padding.bottom
-  const minVal = Math.min(...data.map((d) => d.netWorth))
-  const maxVal = Math.max(...data.map((d) => d.netWorth))
-  const range = maxVal - minVal || 1
-  const tickValues: number[] = []
-  for (let i = 0; i <= yTicksCount; i++) {
-    tickValues.push(minVal + (i / yTicksCount) * (maxVal - minVal))
-  }
-  const points = data
-    .map((d, i) => {
-      const x = padding.left + (i / Math.max(1, data.length - 1)) * innerWidth
-      const y = padding.top + (1 - (d.netWorth - minVal) / range) * innerHeight
-      return `${x},${y}`
-    })
-    .join(' ')
-  const formatTick = (v: number) =>
-    v >= 1000 || v <= -1000 ? `${(v / 1000).toFixed(1)}k` : v.toFixed(0)
-  const showEveryNthLabel = data.length > 10 ? 2 : 1
-  const activeIndex = pinnedIndex ?? hoverIndex
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const el = containerRef.current
-    if (!el || data.length === 0) return
-    const rect = el.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const fraction = rect.width > 0 ? x / rect.width : 0
-    const index = Math.min(data.length - 1, Math.max(0, Math.floor(fraction * data.length)))
-    setHoverIndex(index)
-  }
-  const handleMouseLeave = () => setHoverIndex(null)
-
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.stopPropagation()
-    const el = containerRef.current
-    if (!el || data.length === 0) return
-    const rect = el.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const fraction = rect.width > 0 ? x / rect.width : 0
-    const index = Math.min(data.length - 1, Math.max(0, Math.floor(fraction * data.length)))
-    setPinnedIndex(index)
-  }
-
-  useEffect(() => {
-    if (pinnedIndex === null) return
-    const onDocClick = () => {
-      setPinnedIndex(null)
-      document.removeEventListener('click', onDocClick)
-    }
-    document.addEventListener('click', onDocClick)
-    return () => document.removeEventListener('click', onDocClick)
-  }, [pinnedIndex])
-
+  const minVal = useMemo(() => (data.length ? Math.min(...data.map((d) => d.netWorth)) : 0), [data])
+  const maxVal = useMemo(() => (data.length ? Math.max(...data.map((d) => d.netWorth)) : 1), [data])
+  const series = useMemo(
+    () => [
+      {
+        id: 'net',
+        name: 'Net worth',
+        color: 'rgb(59, 130, 246)',
+        values: data.map((d) => d.netWorth),
+      },
+    ],
+    [data]
+  )
+  const chartData = useMemo(() => data.map((d) => ({ ym: d.ym, label: d.label })), [data])
   return (
-    <div
-      className="relative w-full min-h-0"
-      style={{ minHeight: height }}
-      ref={containerRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onClick={handleClick}
-    >
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="w-full block"
-        style={{ height, minHeight: height, maxWidth: '100%' }}
-        preserveAspectRatio="xMidYMid meet"
-      >
-        {/* Grid */}
-        {tickValues.slice(1, -1).map((v, i) => {
-          const y = padding.top + (1 - (v - minVal) / range) * innerHeight
-          return (
-            <line
-              key={i}
-              x1={padding.left}
-              y1={y}
-              x2={width - padding.right}
-              y2={y}
-              stroke="currentColor"
-              strokeOpacity={0.15}
-              strokeDasharray="2,2"
-              strokeWidth="1"
-            />
-          )
-        })}
-        {data.length > 1 &&
-          data.slice(1, -1).map((_, i) => {
-            const x = padding.left + ((i + 1) / (data.length - 1)) * innerWidth
-            return (
-              <line
-                key={i}
-                x1={x}
-                y1={padding.top}
-                x2={x}
-                y2={height - padding.bottom}
-                stroke="currentColor"
-                strokeOpacity={0.1}
-                strokeDasharray="2,2"
-                strokeWidth="1"
-              />
-            )
-          })}
-        {/* Y-axis labels */}
-        {tickValues.map((v, i) => {
-          const y = padding.top + (1 - (v - minVal) / range) * innerHeight
-          return (
-            <text
-              key={i}
-              x={padding.left - 8}
-              y={y + 4}
-              textAnchor="end"
-              className="fill-gray-500 dark:fill-gray-400"
-              fontSize={fontSize.axis}
-            >
-              ${formatTick(v)}
-            </text>
-          )
-        })}
-        <polyline
-          fill="none"
-          stroke="rgb(59, 130, 246)"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          points={points}
-        />
-        {/* X-axis month labels */}
-        {data.map((d, i) => {
-          if (i % showEveryNthLabel !== 0) return null
-          const x = padding.left + (i / Math.max(1, data.length - 1)) * innerWidth
-          return (
-            <text
-              key={d.ym}
-              x={x}
-              y={height - 10}
-              textAnchor="middle"
-              className="fill-gray-500 dark:fill-gray-400"
-              fontSize={fontSize.label}
-            >
-              {d.label}
-            </text>
-          )
-        })}
-      </svg>
-      {/* Hover / tap tooltip */}
-      {activeIndex !== null && data[activeIndex] && (
-        <div
-          className={CHART_TOOLTIP_CLASS}
-          style={{ left: '50%', top: 8, transform: 'translateX(-50%)' }}
-        >
-          <p className={CHART_TOOLTIP_TITLE_CLASS}>{data[activeIndex].label}</p>
-          <p className="tabular-nums font-medium">${data[activeIndex].netWorth.toFixed(2)}</p>
-        </div>
+    <TrendLineChart
+      data={chartData}
+      series={series}
+      yMin={minVal}
+      yMax={maxVal}
+      formatYTick={(v) => (v >= 1000 || v <= -1000 ? `${(v / 1000).toFixed(1)}k` : v.toFixed(0))}
+      renderTooltip={(monthIndex) => (
+        <p className="tabular-nums font-medium">${data[monthIndex].netWorth.toFixed(2)}</p>
       )}
-    </div>
+    />
   )
 }
 
@@ -1041,8 +651,6 @@ function CategoryOverTimeSection({
   const [byMonthDropdownOpen, setByMonthDropdownOpen] = useState(false)
   const trendDropdownRef = useRef<HTMLDivElement>(null)
   const byMonthDropdownRef = useRef<HTMLDivElement>(null)
-  const [hoveredBarYm, setHoveredBarYm] = useState<string | null>(null)
-
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (trendDropdownRef.current && !trendDropdownRef.current.contains(e.target as Node)) setTrendDropdownOpen(false)
@@ -1052,27 +660,10 @@ function CategoryOverTimeSection({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  useEffect(() => {
-    if (!hoveredBarYm) return
-    const onDocClick = () => {
-      setHoveredBarYm(null)
-      document.removeEventListener('click', onDocClick)
-    }
-    document.addEventListener('click', onDocClick)
-    return () => document.removeEventListener('click', onDocClick)
-  }, [hoveredBarYm])
-
   const hasTrendData = trendData.some((m) => m.series.length > 0)
   const hasByMonthData = byMonthData.some((m) => m.series.length > 0)
   const trendMaxVal = hasTrendData ? Math.max(1, ...trendData.flatMap((m) => m.series.map((s) => s.total))) : 1
   const byMonthMaxVal = hasByMonthData ? Math.max(1, ...byMonthData.flatMap((m) => m.series.map((s) => s.total))) : 1
-  const { barChart } = CHART
-  const byMonthChartHeight =
-    barChart.tooltipReserveHeight +
-    barChart.barHeight +
-    barChart.monthLabelHeight +
-    8 /* gap before legend */ +
-    barChart.legendRowHeight
 
   const byMonthLegendCategories = useMemo(() => {
     const ids: string[] = []
@@ -1130,111 +721,37 @@ function CategoryOverTimeSection({
           openDropdown={byMonthDropdownOpen}
           setOpenDropdown={setByMonthDropdownOpen}
         />
-        {!hasByMonthData ? (
-          <p className="text-xs text-gray-400 dark:text-gray-500">{emptyMessage}</p>
-        ) : (
-          <div
-            className="relative min-w-0 w-full overflow-y-hidden"
-            style={{
-              height: byMonthChartHeight,
-              marginTop: CHART.section.chartMarginTop,
-              paddingLeft: barChart.horizontalPadding,
-              paddingRight: barChart.horizontalPadding,
-            }}
-          >
-            <div className="relative flex w-full flex-col">
-              {/* Tooltip: anchored above hovered bar (percentage-based for flexible bars) */}
-              {hoveredBarYm && (() => {
-                const m = byMonthData.find((d) => d.ym === hoveredBarYm)
-                const hoveredIndex = byMonthData.findIndex((d) => d.ym === hoveredBarYm)
-                if (!m || hoveredIndex < 0) return null
-                const leftPct = ((hoveredIndex + 0.5) / byMonthData.length) * 100
-                return (
-                  <div
-                    className={CHART_TOOLTIP_CLASS}
-                    style={{
-                      left: `${leftPct}%`,
-                      top: 0,
-                      transform: 'translateX(-50%)',
-                    }}
-                  >
-                    <p className={CHART_TOOLTIP_TITLE_CLASS}>{m.label}</p>
-                    <ul className={CHART_TOOLTIP_BODY_CLASS}>
-                      {m.series.map((s, i) => (
-                        <li key={s.id} className="flex items-center gap-2">
-                          <span
-                            className="w-2 h-2 rounded-full shrink-0"
-                            style={{ backgroundColor: getCategoryColor(s.id, categories, i) }}
-                          />
-                          <span className="truncate">{s.name}:</span>
-                          <span className="tabular-nums">${s.total.toFixed(2)}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )
-              })()}
-              {/* Bars row */}
-              <div
-                className="flex w-full shrink-0"
-                style={{ marginTop: barChart.tooltipReserveHeight, gap: barChart.gap }}
-              >
-                {byMonthData.map((m) => (
-                  <div
-                    key={m.ym}
-                    className="flex min-w-0 flex-1 flex-col gap-0.5"
-                    onMouseEnter={() => setHoveredBarYm(m.ym)}
-                    onMouseLeave={() => setHoveredBarYm(null)}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setHoveredBarYm(m.ym)
-                    }}
-                  >
-                    {m.series.length === 0 ? (
-                      <div style={{ height: barChart.barHeight }} />
-                    ) : (
-                      <div
-                        className="flex flex-col gap-0.5 justify-end"
-                        style={{ height: barChart.barHeight }}
-                      >
-                        {m.series.map((s, i) => (
-                          <div
-                            key={s.id}
-                            className="rounded-sm min-h-[2px]"
-                            style={{
-                              height: `${(s.total / byMonthMaxVal) * 100}%`,
-                              backgroundColor: getCategoryColor(s.id, categories, i),
-                            }}
-                          />
-                        ))}
-                      </div>
-                    )}
-                    <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate mt-1">{m.label}</span>
-                  </div>
-                ))}
-              </div>
-              {/* Category legend (below month labels) */}
-              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-gray-600 dark:text-gray-400 shrink-0 min-h-0">
-                {byMonthLegendCategories.map((catId, idx) => {
-                  const name = categories.find((c) => c.id === catId)?.name ?? catId
-                  const color = getCategoryColor(catId, categories, idx)
-                  return (
-                    <span key={catId} className="flex items-center gap-1.5">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: color }}
-                        aria-hidden
-                      />
-                      <span className="truncate max-w-[120px]" title={name}>
-                        {name}
-                      </span>
-                    </span>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        )}
+        <VerticalBarChart
+          data={byMonthData}
+          hasData={hasByMonthData}
+          emptyMessage={emptyMessage}
+          getSegments={(m) =>
+            m.series.map((s, i) => ({
+              heightPct: byMonthMaxVal > 0 ? (s.total / byMonthMaxVal) * 100 : 0,
+              color: getCategoryColor(s.id, categories, i),
+              label: s.name,
+            }))
+          }
+          legendItems={byMonthLegendCategories.map((catId, idx) => ({
+            id: catId,
+            name: categories.find((c) => c.id === catId)?.name ?? catId,
+            color: getCategoryColor(catId, categories, idx),
+          }))}
+          renderTooltip={(m) => (
+            <ul className={CHART_TOOLTIP_BODY_CLASS}>
+              {m.series.map((s, i) => (
+                <li key={s.id} className="flex items-center gap-2">
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: getCategoryColor(s.id, categories, i) }}
+                  />
+                  <span className="truncate">{s.name}:</span>
+                  <span className="tabular-nums">${s.total.toFixed(2)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        />
       </section>
     </>
   )

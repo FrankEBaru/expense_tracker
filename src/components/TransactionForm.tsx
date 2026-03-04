@@ -74,6 +74,14 @@ export default function TransactionForm({
   }, [type, accounts, categories, isEdit])
 
   useEffect(() => {
+    if (type === 'transfer' || categories.length === 0) return
+    const validIds = new Set(categories.map((c) => c.id))
+    if (!categoryId || !validIds.has(categoryId)) {
+      setCategoryId(categories[0].id)
+    }
+  }, [type, categories, categoryId])
+
+  useEffect(() => {
     if (transaction) {
       setType(transaction.type)
       setAccountId(transaction.account_id ?? '')
@@ -188,7 +196,7 @@ export default function TransactionForm({
       : `Add ${type}`
 
   return (
-    <div className="fixed inset-0 z-20 flex items-end sm:items-center justify-center bg-black/50 p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="p-4 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{title}</h2>

@@ -15,10 +15,12 @@ interface TransactionListProps {
 }
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr + 'Z').toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  })
+  const parts = dateStr.split('-').map(Number)
+  if (parts.length !== 3 || parts.some(Number.isNaN)) return 'Invalid date'
+  const [y, m, d] = parts
+  const date = new Date(y, m - 1, d)
+  if (Number.isNaN(date.getTime())) return 'Invalid date'
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
 function getAccountName(accounts: Account[], id: string | null): string {

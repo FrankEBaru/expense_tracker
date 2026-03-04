@@ -28,6 +28,9 @@ export const CHART = {
     legendRowHeight: 32,
     /** Horizontal padding inside the chart area to avoid cramped scrollbar */
     horizontalPadding: 8,
+    /** Clamp tooltip center so it stays inside the chart (avoids cut-off on first/last bars) */
+    tooltipMinLeftPct: 15,
+    tooltipMaxLeftPct: 85,
   },
   /** Section spacing */
   section: {
@@ -38,7 +41,7 @@ export const CHART = {
 
 /** Single class string for all chart hover tooltips: dark background, white text. */
 export const CHART_TOOLTIP_CLASS =
-  'absolute z-10 px-3 py-2 rounded-lg border border-gray-600 bg-gray-800 dark:bg-gray-900 text-white shadow-xl text-xs pointer-events-none'
+  'absolute z-30 px-3 py-2 rounded-lg border border-gray-600 bg-gray-800 dark:bg-gray-900 text-white shadow-xl text-xs pointer-events-none'
 
 /** Inner content for tooltip title (month label). */
 export const CHART_TOOLTIP_TITLE_CLASS = 'font-semibold border-b border-gray-600 pb-1.5 mb-1.5'
