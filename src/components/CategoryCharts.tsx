@@ -1,5 +1,6 @@
 import type { Transaction } from '../types/transaction'
 import type { Category } from '../types/category'
+import { getCategoryColor } from '../constants/colors'
 
 interface CategoryChartsProps {
   transactions: Transaction[]
@@ -27,12 +28,12 @@ function sumByCategory(
 function BarChart({
   title,
   items,
-  barColor,
+  categories,
   emptyMessage,
 }: {
   title: string
-  items: { name: string; total: number }[]
-  barColor: string
+  items: { id: string; name: string; total: number }[]
+  categories: Category[]
   emptyMessage: string
 }) {
   const max = Math.max(1, ...items.map((i) => i.total))
@@ -43,22 +44,25 @@ function BarChart({
         <p className="text-xs text-gray-400 dark:text-gray-500">{emptyMessage}</p>
       ) : (
         <div className="space-y-1.5">
-          {items.map((item) => (
-            <div key={item.name} className="flex items-center gap-1.5 min-w-0">
-              <span className="w-16 sm:w-20 shrink-0 text-xs text-gray-700 dark:text-gray-300 truncate" title={item.name}>
-                {item.name}
-              </span>
-              <div className="min-w-0 flex-1 h-4 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden">
-                <div
-                  className={`h-full rounded ${barColor}`}
-                  style={{ width: `${(item.total / max) * 100}%` }}
-                />
+          {items.map((item, idx) => {
+            const barColor = getCategoryColor(item.id, categories, idx)
+            return (
+              <div key={item.id} className="flex items-center gap-1.5 min-w-0">
+                <span className="w-16 sm:w-20 shrink-0 text-xs text-gray-700 dark:text-gray-300 truncate" title={item.name}>
+                  {item.name}
+                </span>
+                <div className="min-w-0 flex-1 h-4 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden">
+                  <div
+                    className="h-full rounded"
+                    style={{ width: `${(item.total / max) * 100}%`, backgroundColor: barColor }}
+                  />
+                </div>
+                <span className="w-12 sm:w-14 shrink-0 text-right text-xs font-medium text-gray-800 dark:text-gray-200 tabular-nums">
+                  ${item.total.toFixed(2)}
+                </span>
               </div>
-              <span className="w-12 sm:w-14 shrink-0 text-right text-xs font-medium text-gray-800 dark:text-gray-200 tabular-nums">
-                ${item.total.toFixed(2)}
-              </span>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
@@ -78,13 +82,13 @@ export default function CategoryCharts({
       <BarChart
         title="Expenses by category"
         items={expenseData}
-        barColor="bg-red-500 dark:bg-red-600"
+        categories={expenseCategories}
         emptyMessage="No expenses this month"
       />
       <BarChart
         title="Income by category"
         items={incomeData}
-        barColor="bg-green-500 dark:bg-green-600"
+        categories={incomeCategories}
         emptyMessage="No income this month"
       />
     </section>

@@ -3,6 +3,7 @@ import { Session } from '@supabase/supabase-js'
 import { supabase, isSupabaseConfigured } from './lib/supabase'
 import Auth from './components/Auth'
 import Dashboard from './components/Dashboard'
+import Insights from './components/Insights'
 import Settings from './components/Settings'
 import TransactionForm from './components/TransactionForm'
 import { useAccounts } from './hooks/useAccounts'
@@ -11,7 +12,7 @@ import type { Transaction } from './types/transaction'
 import type { TransactionInsert } from './types/transaction'
 import type { TransactionUpdate } from './types/transaction'
 
-type View = 'dashboard' | 'settings'
+type View = 'dashboard' | 'settings' | 'insights'
 
 function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -30,6 +31,17 @@ function App() {
     if (stored === 'dark') return true
     return true
   })
+  const [toast, setToast] = useState<{ message: string } | null>(null)
+
+  const showToast = useCallback((message: string) => {
+    setToast({ message })
+  }, [])
+
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 4500)
+    return () => clearTimeout(t)
+  }, [toast])
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
@@ -49,9 +61,13 @@ function App() {
   const { categories: expenseCategories, refetch: refetchExpenseCategories } = useCategories('expense')
   const { categories: incomeCategories, refetch: refetchIncomeCategories } = useCategories('income')
 
+  useEffect(() => {
+    if (session) refetchAccounts()
+  }, [session, refetchAccounts])
+
   const prevViewRef = useRef<View>(view)
   useEffect(() => {
-    if (prevViewRef.current === 'settings' && view === 'dashboard') {
+    if ((prevViewRef.current === 'settings' || prevViewRef.current === 'insights') && view === 'dashboard') {
       refetchAccounts()
       refetchExpenseCategories()
       refetchIncomeCategories()
@@ -98,6 +114,8 @@ function App() {
 
   const openSettings = useCallback(() => setView('settings'), [])
   const closeSettings = useCallback(() => setView('dashboard'), [])
+  const openInsights = useCallback(() => setView('insights'), [])
+  const closeInsights = useCallback(() => setView('dashboard'), [])
 
   if (!isSupabaseConfigured) {
     return (
@@ -131,9 +149,18 @@ function App() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
       <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-          {view === 'dashboard' ? 'Finance' : 'Settings'}
+          {view === 'dashboard' ? 'Finance' : view === 'insights' ? 'Insights' : 'Settings'}
         </h1>
         <div className="flex items-center gap-3">
+          {view === 'dashboard' && (
+            <button
+              type="button"
+              onClick={openInsights}
+              className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              Insights
+            </button>
+          )}
           <button
             type="button"
             onClick={toggleTheme}
@@ -164,10 +191,23 @@ function App() {
             onEditTransaction={openEditForm}
             onMutationsReady={setTxMutations}
             onAccountsRefetch={refetchAccounts}
+            onError={showToast}
           />
         )}
-        {view === 'settings' && <Settings onBack={closeSettings} />}
+        {view === 'settings' && <Settings onBack={closeSettings} onError={showToast} />}
+        {view === 'insights' && <Insights onBack={closeInsights} />}
       </main>
+
+      {view === 'dashboard' && (
+        <button
+          type="button"
+          onClick={openAddForm}
+          className="fixed bottom-6 right-6 z-10 py-3 px-6 bg-blue-600 text-white font-medium rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+          aria-label="Add transaction"
+        >
+          Add transaction
+        </button>
+      )}
 
       {showForm && txMutations && (
         <TransactionForm
@@ -177,9 +217,19 @@ function App() {
           incomeCategories={incomeCategories}
           onClose={closeForm}
           onSaved={handleTransactionSaved}
+          onError={showToast}
           addTransaction={txMutations.addTransaction}
           updateTransaction={txMutations.updateTransaction}
         />
+      )}
+
+      {toast && (
+        <div
+          className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-lg bg-gray-800 text-white text-sm shadow-lg dark:bg-gray-700 max-w-[90vw]"
+          role="alert"
+        >
+          {toast.message}
+        </div>
       )}
     </div>
   )

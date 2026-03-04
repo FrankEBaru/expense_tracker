@@ -82,9 +82,10 @@ interface DashboardProps {
   onEditTransaction: (tx: Transaction) => void
   onMutationsReady?: (mutations: TransactionMutations) => void
   onAccountsRefetch?: () => void
+  onError?: (message: string) => void
 }
 
-export default function Dashboard({ accounts, accountsLoading, accountsError, onAddTransaction, onOpenSettings, onEditTransaction, onMutationsReady, onAccountsRefetch }: DashboardProps) {
+export default function Dashboard({ accounts, accountsLoading, accountsError, onAddTransaction, onOpenSettings, onEditTransaction, onMutationsReady, onAccountsRefetch, onError }: DashboardProps) {
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
@@ -110,10 +111,14 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
 
   const handleDeleteTransaction = useCallback(
     async (id: string) => {
-      await deleteTransaction(id)
-      onAccountsRefetch?.()
+      try {
+        await deleteTransaction(id)
+        onAccountsRefetch?.()
+      } catch (err) {
+        onError?.(err instanceof Error ? err.message : 'Could not delete transaction.')
+      }
     },
-    [deleteTransaction, onAccountsRefetch]
+    [deleteTransaction, onAccountsRefetch, onError]
   )
 
   const prevMonth = () => {
@@ -151,8 +156,8 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
 
   return (
     <div className="space-y-4">
-      <section>
-        <div className="flex items-center justify-between mb-2">
+      <section className="border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-800">
+        <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300">Accounts</h2>
           <button
             type="button"
@@ -164,36 +169,59 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
         </div>
         {accountsLoading ? (
           <p className="text-gray-500 dark:text-gray-400 text-sm">Loading accounts…</p>
+        ) : accounts.length === 0 ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">No accounts yet. Add one in Settings.</p>
         ) : (
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setSelectedAccountId(null)}
-              className={`px-3 py-2 rounded-lg border text-sm font-medium ${
-                selectedAccountId === null
-                  ? 'bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-900/40 dark:border-blue-700 dark:text-blue-200'
-                  : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
-              }`}
-            >
-              All
-            </button>
-            {accounts.map((acc) => (
-              <button
-                key={acc.id}
-                type="button"
-                onClick={() =>
-                  setSelectedAccountId(selectedAccountId === acc.id ? null : acc.id)
-                }
-                className={`px-3 py-2 rounded-lg border text-sm font-medium ${
-                  selectedAccountId === acc.id
-                    ? 'bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-900/40 dark:border-blue-700 dark:text-blue-200'
-                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
-                }`}
-              >
-                {acc.name}: ${(acc as AccountWithBalance).balance.toFixed(2)}
-              </button>
-            ))}
-          </div>
+          <>
+            <div className="mb-3">
+              <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
+              <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                {(() => {
+                  const visible = accounts.filter((a) => !a.hide_balance)
+                  if (visible.length === 0) return '—'
+                  const sum = visible.reduce((s, a) => s + (a as AccountWithBalance).balance, 0)
+                  return `$${sum.toFixed(2)}`
+                })()}
+              </p>
+            </div>
+            <ul className="space-y-1">
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setSelectedAccountId(null)}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium ${
+                    selectedAccountId === null
+                      ? 'bg-blue-100 border border-blue-300 text-blue-800 dark:bg-blue-900/40 dark:border-blue-700 dark:text-blue-200'
+                      : 'border border-transparent text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  All
+                </button>
+              </li>
+              {accounts.map((acc) => {
+                const balance = (acc as AccountWithBalance).balance
+                const balanceStr = acc.hide_balance ? '•••' : `$${balance.toFixed(2)}`
+                return (
+                  <li key={acc.id}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedAccountId(selectedAccountId === acc.id ? null : acc.id)
+                      }
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium flex justify-between items-center ${
+                        selectedAccountId === acc.id
+                          ? 'bg-blue-100 border border-blue-300 text-blue-800 dark:bg-blue-900/40 dark:border-blue-700 dark:text-blue-200'
+                          : 'border border-transparent text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      <span>{acc.name}</span>
+                      <span>{balanceStr}</span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </>
         )}
       </section>
 
@@ -279,16 +307,6 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
           onDelete={handleDeleteTransaction}
         />
       </section>
-
-      <div className="flex justify-center pt-2">
-        <button
-          type="button"
-          onClick={onAddTransaction}
-          className="py-3 px-6 bg-blue-600 text-white font-medium rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-        >
-          Add transaction
-        </button>
-      </div>
     </div>
   )
 }

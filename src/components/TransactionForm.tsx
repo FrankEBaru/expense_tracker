@@ -11,6 +11,7 @@ interface TransactionFormProps {
   incomeCategories: Category[]
   onClose: () => void
   onSaved: () => void
+  onError?: (message: string) => void
   addTransaction: (insert: {
     user_id: string
     type: TransactionType
@@ -43,6 +44,7 @@ export default function TransactionForm({
   incomeCategories,
   onClose,
   onSaved,
+  onError,
   addTransaction,
   updateTransaction,
 }: TransactionFormProps) {
@@ -171,7 +173,9 @@ export default function TransactionForm({
       }
       onSaved()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save')
+      const msg = err instanceof Error ? err.message : 'Failed to save'
+      setError(msg)
+      onError?.(msg)
     } finally {
       setSaving(false)
     }

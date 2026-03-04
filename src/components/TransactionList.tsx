@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react'
 import type { Transaction } from '../types/transaction'
 import type { Account } from '../types/account'
 import type { Category } from '../types/category'
@@ -41,6 +42,18 @@ export default function TransactionList({
   onEdit,
   onDelete,
 }: TransactionListProps) {
+  const [openMenuTxId, setOpenMenuTxId] = useState<string | null>(null)
+  const menuRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (openMenuTxId === null) return
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpenMenuTxId(null)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [openMenuTxId])
+
   if (error) {
     return (
       <p className="text-red-600 dark:text-red-400 text-sm">Failed to load transactions: {error}</p>
@@ -101,25 +114,42 @@ export default function TransactionList({
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5 truncate">{tx.description}</p>
               )}
             </div>
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="relative shrink-0" ref={openMenuTxId === tx.id ? menuRef : undefined}>
               <button
                 type="button"
-                onClick={() => onEdit(tx)}
-                className="p-2 text-gray-500 hover:text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                aria-label="Edit"
+                onClick={() => setOpenMenuTxId(openMenuTxId === tx.id ? null : tx.id)}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                aria-label="Actions"
+                aria-expanded={openMenuTxId === tx.id}
               >
-                Edit
+                ⋮
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (window.confirm('Delete this transaction?')) onDelete(tx.id)
-                }}
-                className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                aria-label="Delete"
-              >
-                Delete
-              </button>
+              {openMenuTxId === tx.id && (
+                <div className="absolute right-0 top-full mt-1 z-20 min-w-[7rem] rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800 py-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onEdit(tx)
+                      setOpenMenuTxId(null)
+                    }}
+                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm('Delete this transaction?')) {
+                        onDelete(tx.id)
+                        setOpenMenuTxId(null)
+                      }
+                    }}
+                    className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-700"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           </li>
         )
