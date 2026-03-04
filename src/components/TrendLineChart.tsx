@@ -31,10 +31,25 @@ export function TrendLineChart({
 }: TrendLineChartProps) {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
   const [pinnedIndex, setPinnedIndex] = useState<number | null>(null)
+  const [containerWidth, setContainerWidth] = useState<number>(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const ro = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (entry) setContainerWidth(entry.contentRect.width)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
   const range = yMax - yMin || 1
-  const width = Math.max(minWidth, data.length * widthPerPoint)
+  const width =
+    containerWidth > 0
+      ? Math.max(minWidth, containerWidth)
+      : Math.max(minWidth, data.length * widthPerPoint)
   const innerWidth = width - padding.left - padding.right
   const innerHeight = height - padding.top - padding.bottom
 
@@ -91,7 +106,7 @@ export function TrendLineChart({
       <svg
         viewBox={`0 0 ${width} ${height}`}
         className="w-full block"
-        style={{ height, minHeight: height, maxWidth: '100%' }}
+        style={{ height, minHeight: height }}
         preserveAspectRatio="xMidYMid meet"
       >
         {/* Horizontal grid lines */}
