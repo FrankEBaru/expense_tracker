@@ -44,9 +44,9 @@ export default function Settings({ onBack, onError }: SettingsProps) {
   const [categorySaving, setCategorySaving] = useState(false)
   const accountMenuRef = useRef<HTMLDivElement | null>(null)
   const categoryMenuRef = useRef<HTMLDivElement | null>(null)
-  const accountCustomColorRef = useRef<HTMLInputElement>(null)
-  const categoryEditCustomColorRef = useRef<HTMLInputElement>(null)
-  const newCategoryCustomColorRef = useRef<HTMLInputElement>(null)
+  //const accountCustomColorRef = useRef<HTMLInputElement>(null)
+  //const categoryEditCustomColorRef = useRef<HTMLInputElement>(null)
+  //const newCategoryCustomColorRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (openAccountMenuId === null) return
@@ -542,23 +542,15 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                       title={hex}
                     />
                   ))}
-                  <input
-                    ref={accountCustomColorRef}
-                    type="color"
-                    value={accountColor ?? ACCOUNT_PALETTE[0]}
-                    onChange={(e) => setAccountColor(e.target.value)}
-                    className="sr-only"
-                    aria-label="Choose custom color"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => accountCustomColorRef.current?.click()}
-                    className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0"
-                    title="Custom color"
-                    aria-label="Choose custom color"
-                  >
+                  <label className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0 cursor-pointer">
+                    <input
+                      type="color"
+                      value={accountColor ?? ACCOUNT_PALETTE[0]}
+                      onChange={(e) => setAccountColor(e.target.value)}
+                      className="absolute opacity-0 w-0 h-0"
+                    />
                     <span className="text-sm font-medium leading-none">+</span>
-                  </button>
+                  </label>
                 </div>
               </div>
               {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
@@ -614,23 +606,15 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                       title={hex}
                     />
                   ))}
-                  <input
-                    ref={newCategoryCustomColorRef}
-                    type="color"
-                    value={newCategoryColor ?? (addingCategoryType === 'expense' ? EXPENSE_CATEGORY_PALETTE[0] : INCOME_CATEGORY_PALETTE[0])}
-                    onChange={(e) => setNewCategoryColor(e.target.value)}
-                    className="sr-only"
-                    aria-label="Choose custom color"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => newCategoryCustomColorRef.current?.click()}
-                    className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0"
-                    title="Custom color"
-                    aria-label="Choose custom color"
-                  >
+                  <label className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0 cursor-pointer">
+                    <input
+                      type="color"
+                      value={newCategoryColor ?? (addingCategoryType === 'expense' ? EXPENSE_CATEGORY_PALETTE[0] : INCOME_CATEGORY_PALETTE[0])}
+                      onChange={(e) => setNewCategoryColor(e.target.value)}
+                      className="absolute opacity-0 w-0 h-0"
+                    />
                     <span className="text-sm font-medium leading-none">+</span>
-                  </button>
+                  </label>
                 </div>
               </div>
               {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
@@ -684,23 +668,15 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                       title={hex}
                     />
                   ))}
-                  <input
-                    ref={categoryEditCustomColorRef}
-                    type="color"
-                    value={categoryEditColor ?? (categoryForm.type === 'expense' ? EXPENSE_CATEGORY_PALETTE[0] : INCOME_CATEGORY_PALETTE[0])}
-                    onChange={(e) => setCategoryEditColor(e.target.value)}
-                    className="sr-only"
-                    aria-label="Choose custom color"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => categoryEditCustomColorRef.current?.click()}
-                    className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0"
-                    title="Custom color"
-                    aria-label="Choose custom color"
-                  >
+                  <label className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0 cursor-pointer">
+                    <input
+                      type="color"
+                      value={categoryEditColor ?? (categoryForm.type === 'expense' ? EXPENSE_CATEGORY_PALETTE[0] : INCOME_CATEGORY_PALETTE[0])}
+                      onChange={(e) => setCategoryEditColor(e.target.value)}
+                      className="absolute opacity-0 w-0 h-0"
+                    />
                     <span className="text-sm font-medium leading-none">+</span>
-                  </button>
+                  </label>
                 </div>
               </div>
               {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
