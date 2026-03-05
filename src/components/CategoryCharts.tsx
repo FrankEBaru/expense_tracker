@@ -58,7 +58,10 @@ function BarChart({
                     style={{ width: `${(item.total / max) * 100}%`, backgroundColor: barColor }}
                   />
                 </div>
-                <span className="w-12 sm:w-14 shrink-0 text-right text-xs font-medium text-gray-800 dark:text-gray-200 tabular-nums">
+                <span
+                  className="min-w-0 w-20 sm:w-24 truncate text-right text-xs font-medium text-gray-800 dark:text-gray-200 tabular-nums"
+                  title={`$${formatCurrency(item.total)}`}
+                >
                   ${formatCurrency(item.total)}
                 </span>
               </div>

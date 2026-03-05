@@ -43,8 +43,6 @@ export default function Settings({ onBack, onError }: SettingsProps) {
   const [categorySaving, setCategorySaving] = useState(false)
   const accountMenuRef = useRef<HTMLDivElement | null>(null)
   const categoryMenuRef = useRef<HTMLDivElement | null>(null)
-  const accountCustomColorInputRef = useRef<HTMLInputElement | null>(null)
-  const categoryEditColorInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     if (openAccountMenuId === null) return
@@ -245,13 +243,6 @@ export default function Settings({ onBack, onError }: SettingsProps) {
 
   return (
     <div className="space-y-6">
-      <input
-        ref={accountCustomColorInputRef}
-        type="color"
-        className="sr-only w-0 h-0 opacity-0 absolute"
-        aria-hidden
-        onChange={(e) => setAccountColor(e.target.value)}
-      />
       <div className="flex items-center justify-between">
         <button
           type="button"
@@ -285,9 +276,9 @@ export default function Settings({ onBack, onError }: SettingsProps) {
               {accounts.map((acc, idx) => (
                 <li
                   key={acc.id}
-                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center justify-between gap-2 flex-wrap"
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center justify-between gap-3"
                 >
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex flex-1 min-w-0 items-center gap-2 flex-wrap">
                     <span
                       className="w-3 h-3 rounded-full shrink-0"
                       style={{ backgroundColor: getAccountColor(acc, idx) }}
@@ -298,7 +289,7 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                       Initial: ${formatCurrency(Number(acc.initial_balance))}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex shrink-0 items-center gap-3">
                     <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
                       <input
                         type="checkbox"
@@ -550,21 +541,15 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                       title={hex}
                     />
                   ))}
-                  <button
-                    type="button"
-                    onClick={() => accountCustomColorInputRef.current?.click()}
-                    className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center text-gray-500 text-xs font-bold"
+                  <input
+                    type="color"
+                    value={accountColor ?? ACCOUNT_PALETTE[0]}
+                    onChange={(e) => setAccountColor(e.target.value)}
+                    className="min-w-[44px] min-h-[44px] w-10 h-10 rounded border border-gray-300 dark:border-gray-500 cursor-pointer bg-transparent"
                     title="Custom color"
-                  >
-                    +
-                  </button>
-                  {accountColor && !(ACCOUNT_PALETTE as readonly string[]).includes(accountColor) && (
-                    <span
-                      className="w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-500 shrink-0"
-                      style={{ backgroundColor: accountColor }}
-                      title="Custom"
-                    />
-                  )}
+                    aria-label="Choose custom color"
+                  />
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Custom</span>
                 </div>
               </div>
               {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
@@ -592,13 +577,6 @@ export default function Settings({ onBack, onError }: SettingsProps) {
 
       {categoryForm && (
         <div className="fixed inset-0 z-20 flex items-end sm:items-center justify-center bg-black/50 p-4">
-          <input
-            ref={categoryEditColorInputRef}
-            type="color"
-            className="sr-only w-0 h-0 opacity-0 absolute"
-            aria-hidden
-            onChange={(e) => setCategoryEditColor(e.target.value)}
-          />
           <div className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-xl p-4">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Edit category</h3>
             <div className="space-y-4">
@@ -625,21 +603,15 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                       title={hex}
                     />
                   ))}
-                  <button
-                    type="button"
-                    onClick={() => categoryEditColorInputRef.current?.click()}
-                    className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center text-gray-500 text-xs font-bold"
+                  <input
+                    type="color"
+                    value={categoryEditColor ?? (categoryForm.type === 'expense' ? EXPENSE_CATEGORY_PALETTE[0] : INCOME_CATEGORY_PALETTE[0])}
+                    onChange={(e) => setCategoryEditColor(e.target.value)}
+                    className="min-w-[44px] min-h-[44px] w-10 h-10 rounded border border-gray-300 dark:border-gray-500 cursor-pointer bg-transparent"
                     title="Custom color"
-                  >
-                    +
-                  </button>
-                  {categoryEditColor && !((categoryForm.type === 'expense' ? EXPENSE_CATEGORY_PALETTE : INCOME_CATEGORY_PALETTE) as readonly string[]).includes(categoryEditColor) && (
-                    <span
-                      className="w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-500 shrink-0"
-                      style={{ backgroundColor: categoryEditColor }}
-                      title="Custom"
-                    />
-                  )}
+                    aria-label="Choose custom color"
+                  />
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Custom</span>
                 </div>
               </div>
               {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}

@@ -356,10 +356,24 @@ export default function Insights({ onBack }: InsightsProps) {
             { id: 'expenses', name: 'Expenses', color: 'rgb(239, 68, 68)' },
           ]}
           renderTooltip={(m) => (
-            <>
-              <p className="tabular-nums">Income: ${formatCurrency(m.income)}</p>
-              <p className="tabular-nums">Expenses: ${formatCurrency(m.expenses)}</p>
-            </>
+            <ul className={CHART_TOOLTIP_BODY_CLASS}>
+              <li key="income" className="flex items-center gap-2">
+                <span
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ backgroundColor: 'rgb(34, 197, 94)' }}
+                />
+                <span className="truncate">Income:</span>
+                <span className="tabular-nums">${formatCurrency(m.income)}</span>
+              </li>
+              <li key="expenses" className="flex items-center gap-2">
+                <span
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ backgroundColor: 'rgb(239, 68, 68)' }}
+                />
+                <span className="truncate">Expenses:</span>
+                <span className="tabular-nums">${formatCurrency(m.expenses)}</span>
+              </li>
+            </ul>
           )}
         />
       </section>
