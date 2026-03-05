@@ -13,6 +13,7 @@ create table if not exists public.accounts (
 create index if not exists accounts_user_id_idx on public.accounts (user_id);
 alter table public.accounts enable row level security;
 
+drop policy if exists "Users can CRUD own accounts" on public.accounts;
 create policy "Users can CRUD own accounts"
   on public.accounts for all
   using (auth.uid() = user_id)
@@ -32,6 +33,7 @@ create table if not exists public.categories (
 create index if not exists categories_user_id_type_idx on public.categories (user_id, type);
 alter table public.categories enable row level security;
 
+drop policy if exists "Users can CRUD own categories" on public.categories;
 create policy "Users can CRUD own categories"
   on public.categories for all
   using (auth.uid() = user_id)
@@ -64,6 +66,7 @@ create index if not exists transactions_to_account_id_idx on public.transactions
 
 alter table public.transactions enable row level security;
 
+drop policy if exists "Users can CRUD own transactions" on public.transactions;
 create policy "Users can CRUD own transactions"
   on public.transactions for all
   using (auth.uid() = user_id)

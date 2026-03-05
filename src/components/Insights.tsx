@@ -2,8 +2,9 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { useTransactionsRange } from '../hooks/useTransactionsRange'
 import { useAccounts } from '../hooks/useAccounts'
 import { useCategories } from '../hooks/useCategories'
-import { getCategoryColor } from '../constants/colors'
+import { getCategoryColor, EXPENSE_CATEGORY_PALETTE, INCOME_CATEGORY_PALETTE, type ColorPalette } from '../constants/colors'
 import { CHART, CHART_TOOLTIP_BODY_CLASS } from '../constants/chartConfig'
+import { formatCurrency } from '../utils/format'
 import { VerticalBarChart } from './VerticalBarChart'
 import { TrendLineChart } from './TrendLineChart'
 import type { Transaction } from '../types/transaction'
@@ -299,34 +300,34 @@ export default function Insights({ onBack }: InsightsProps) {
         <div className="grid grid-cols-3 gap-2 text-center text-sm">
           <div>
             <p className="text-gray-500 dark:text-gray-400">Income</p>
-            <p className="font-medium text-green-700 dark:text-green-400">${currentSummary.income.toFixed(2)}</p>
+            <p className="font-medium text-green-700 dark:text-green-400">${formatCurrency(currentSummary.income)}</p>
             {prevMonth && (
               <p className="text-xs text-gray-500">
                 {prevSummary.income === 0
                   ? '—'
-                  : `${currentSummary.income >= prevSummary.income ? '+' : ''}${(currentSummary.income - prevSummary.income).toFixed(2)} vs last`}
+                  : `${currentSummary.income >= prevSummary.income ? '+' : ''}${formatCurrency(currentSummary.income - prevSummary.income)} vs last`}
               </p>
             )}
           </div>
           <div>
             <p className="text-gray-500 dark:text-gray-400">Expenses</p>
-            <p className="font-medium text-red-700 dark:text-red-400">${currentSummary.expenses.toFixed(2)}</p>
+            <p className="font-medium text-red-700 dark:text-red-400">${formatCurrency(currentSummary.expenses)}</p>
             {prevMonth && (
               <p className="text-xs text-gray-500">
                 {prevSummary.expenses === 0
                   ? '—'
-                  : `${currentSummary.expenses >= prevSummary.expenses ? '+' : ''}${(currentSummary.expenses - prevSummary.expenses).toFixed(2)} vs last`}
+                  : `${currentSummary.expenses >= prevSummary.expenses ? '+' : ''}${formatCurrency(currentSummary.expenses - prevSummary.expenses)} vs last`}
               </p>
             )}
           </div>
           <div>
             <p className="text-gray-500 dark:text-gray-400">Net</p>
-            <p className="font-medium text-gray-800 dark:text-gray-200">${currentSummary.net.toFixed(2)}</p>
+            <p className="font-medium text-gray-800 dark:text-gray-200">${formatCurrency(currentSummary.net)}</p>
             {prevMonth && (
               <p className="text-xs text-gray-500">
                 {prevSummary.net === 0
                   ? '—'
-                  : `${currentSummary.net >= prevSummary.net ? '+' : ''}${(currentSummary.net - prevSummary.net).toFixed(2)} vs last`}
+                  : `${currentSummary.net >= prevSummary.net ? '+' : ''}${formatCurrency(currentSummary.net - prevSummary.net)} vs last`}
               </p>
             )}
           </div>
@@ -356,8 +357,8 @@ export default function Insights({ onBack }: InsightsProps) {
           ]}
           renderTooltip={(m) => (
             <>
-              <p className="tabular-nums">Income: ${m.income.toFixed(2)}</p>
-              <p className="tabular-nums">Expenses: ${m.expenses.toFixed(2)}</p>
+              <p className="tabular-nums">Income: ${formatCurrency(m.income)}</p>
+              <p className="tabular-nums">Expenses: ${formatCurrency(m.expenses)}</p>
             </>
           )}
         />
@@ -378,6 +379,7 @@ export default function Insights({ onBack }: InsightsProps) {
         byMonthSelectedIds={expenseSelectedIdsByMonth}
         onByMonthSelectedIdsChange={setExpenseSelectedIdsByMonth}
         categories={expenseCategories}
+        palette={EXPENSE_CATEGORY_PALETTE}
         emptyMessage="No expense data for this period."
       />
 
@@ -396,6 +398,7 @@ export default function Insights({ onBack }: InsightsProps) {
         byMonthSelectedIds={incomeSelectedIdsByMonth}
         onByMonthSelectedIdsChange={setIncomeSelectedIdsByMonth}
         categories={incomeCategories}
+        palette={INCOME_CATEGORY_PALETTE}
         emptyMessage="No income data for this period."
       />
 
@@ -424,7 +427,7 @@ export default function Insights({ onBack }: InsightsProps) {
                 <div className="min-w-0 flex-1 h-4 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden">
                   <div
                     className="h-full rounded"
-                    style={{ width: `${item.share}%`, backgroundColor: getCategoryColor(item.id, expenseCategories, idx) }}
+                    style={{ width: `${item.share}%`, backgroundColor: getCategoryColor(item.id, expenseCategories, idx, EXPENSE_CATEGORY_PALETTE) }}
                   />
                 </div>
                 <span className="w-14 shrink-0 text-right text-xs text-gray-600 dark:text-gray-400">{item.share.toFixed(0)}%</span>
@@ -457,7 +460,7 @@ export default function Insights({ onBack }: InsightsProps) {
             const barPct = netWorthRange === 0 ? 100 : ((m.netWorth - minNetWorth) / netWorthRange) * 100
             return [{ heightPct: barPct, color: 'rgb(59, 130, 246)' }]
           }}
-          renderTooltip={(m) => <p className="tabular-nums font-medium">${m.netWorth.toFixed(2)}</p>}
+          renderTooltip={(m) => <p className="tabular-nums font-medium">${formatCurrency(m.netWorth)}</p>}
         />
       </section>
     </div>
@@ -469,21 +472,23 @@ function CategoryOverTimeLineChart({
   categoryIds,
   categories,
   maxVal,
+  palette,
 }: {
   months: { ym: string; label: string; series: { id: string; name: string; total: number }[] }[]
   categoryIds: string[]
   categories: Category[]
   maxVal: number
+  palette: ColorPalette
 }) {
   const series = useMemo(
     () =>
       categoryIds.map((catId, idx) => ({
         id: catId,
         name: categories.find((c) => c.id === catId)?.name ?? catId,
-        color: getCategoryColor(catId, categories, idx),
+        color: getCategoryColor(catId, categories, idx, palette),
         values: months.map((m) => m.series.find((s) => s.id === catId)?.total ?? 0),
       })),
-    [categoryIds, categories, months]
+    [categoryIds, categories, months, palette]
   )
   const data = useMemo(() => months.map((m) => ({ ym: m.ym, label: m.label })), [months])
   return (
@@ -499,14 +504,14 @@ function CategoryOverTimeLineChart({
             .map((catId, idx) => {
               const name = categories.find((c) => c.id === catId)?.name ?? catId
               const total = months[monthIndex].series.find((s) => s.id === catId)?.total ?? 0
-              return { catId, name, total, color: getCategoryColor(catId, categories, idx) }
+              return { catId, name, total, color: getCategoryColor(catId, categories, idx, palette) }
             })
             .filter((row) => row.total > 0)
             .map((row) => (
               <li key={row.catId} className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
                 <span className="truncate min-w-0">{row.name}</span>
-                <span className="tabular-nums shrink-0">${row.total.toFixed(2)}</span>
+                <span className="tabular-nums shrink-0">${formatCurrency(row.total)}</span>
               </li>
             ))}
         </ul>
@@ -539,7 +544,7 @@ function NetWorthLineChart({ data }: { data: { ym: string; label: string; netWor
       yMax={maxVal}
       formatYTick={(v) => (v >= 1000 || v <= -1000 ? `${(v / 1000).toFixed(1)}k` : v.toFixed(0))}
       renderTooltip={(monthIndex) => (
-        <p className="tabular-nums font-medium">${data[monthIndex].netWorth.toFixed(2)}</p>
+        <p className="tabular-nums font-medium">${formatCurrency(data[monthIndex].netWorth)}</p>
       )}
     />
   )
@@ -625,6 +630,7 @@ function CategoryOverTimeSection({
   byMonthSelectedIds,
   onByMonthSelectedIdsChange,
   categories,
+  palette,
   emptyMessage,
 }: {
   title: string
@@ -640,6 +646,7 @@ function CategoryOverTimeSection({
   byMonthSelectedIds: string[]
   onByMonthSelectedIdsChange: (ids: string[]) => void
   categories: Category[]
+  palette: ColorPalette
   emptyMessage: string
 }) {
   const trendCategoryIds = useMemo(() => {
@@ -703,6 +710,7 @@ function CategoryOverTimeSection({
               categoryIds={trendCategoryIds}
               categories={categories}
               maxVal={trendMaxVal}
+              palette={palette}
             />
           </div>
         )}
@@ -728,14 +736,14 @@ function CategoryOverTimeSection({
           getSegments={(m) =>
             m.series.map((s, i) => ({
               heightPct: byMonthMaxVal > 0 ? (s.total / byMonthMaxVal) * 100 : 0,
-              color: getCategoryColor(s.id, categories, i),
+              color: getCategoryColor(s.id, categories, i, palette),
               label: s.name,
             }))
           }
           legendItems={byMonthLegendCategories.map((catId, idx) => ({
             id: catId,
             name: categories.find((c) => c.id === catId)?.name ?? catId,
-            color: getCategoryColor(catId, categories, idx),
+            color: getCategoryColor(catId, categories, idx, palette),
           }))}
           renderTooltip={(m) => (
             <ul className={CHART_TOOLTIP_BODY_CLASS}>
@@ -743,10 +751,10 @@ function CategoryOverTimeSection({
                 <li key={s.id} className="flex items-center gap-2">
                   <span
                     className="w-2 h-2 rounded-full shrink-0"
-                    style={{ backgroundColor: getCategoryColor(s.id, categories, i) }}
+                    style={{ backgroundColor: getCategoryColor(s.id, categories, i, palette) }}
                   />
                   <span className="truncate">{s.name}:</span>
-                  <span className="tabular-nums">${s.total.toFixed(2)}</span>
+                  <span className="tabular-nums">${formatCurrency(s.total)}</span>
                 </li>
               ))}
             </ul>

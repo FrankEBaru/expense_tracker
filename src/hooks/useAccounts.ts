@@ -29,14 +29,14 @@ export function useAccounts() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchAccounts = useCallback(async () => {
-    setLoading(true)
+  const fetchAccounts = useCallback(async (quiet = false) => {
+    if (!quiet) setLoading(true)
     setError(null)
     const { data } = await supabase.auth.getSession()
     const userId = data.session?.user?.id
     if (!userId) {
       setAccounts([])
-      setLoading(false)
+      if (!quiet) setLoading(false)
       return
     }
     const { data: accountsData, error: e1 } = await supabase
@@ -46,7 +46,7 @@ export function useAccounts() {
     if (e1) {
       setError(e1.message)
       setAccounts([])
-      setLoading(false)
+      if (!quiet) setLoading(false)
       return
     }
     const accountsList = (accountsData as Account[]) ?? []
@@ -58,7 +58,7 @@ export function useAccounts() {
       })
       if (insErr) {
         setError(insErr.message)
-        setLoading(false)
+        if (!quiet) setLoading(false)
         return
       }
       for (const name of DEFAULT_EXPENSE_CATEGORIES) {
@@ -67,7 +67,7 @@ export function useAccounts() {
       for (const name of DEFAULT_INCOME_CATEGORIES) {
         await supabase.from('categories').insert({ user_id: userId, type: 'income', name, sort_order: 0 })
       }
-      return fetchAccounts()
+      return fetchAccounts(quiet)
     }
     const { data: txData, error: e2 } = await supabase
       .from('transactions')
@@ -75,12 +75,12 @@ export function useAccounts() {
     if (e2) {
       setError(e2.message)
       setAccounts(accountsList.map((a) => ({ ...a, balance: Number(a.initial_balance) })))
-      setLoading(false)
+      if (!quiet) setLoading(false)
       return
     }
     const transactions = (txData as Transaction[]) ?? []
     setAccounts(computeBalances(accountsList, transactions))
-    setLoading(false)
+    if (!quiet) setLoading(false)
   }, [])
 
   useEffect(() => {
@@ -91,7 +91,7 @@ export function useAccounts() {
     async (insert: AccountInsert) => {
       const { error: e } = await supabase.from('accounts').insert(insert)
       if (e) throw e
-      await fetchAccounts()
+      await fetchAccounts(true)
     },
     [fetchAccounts]
   )
@@ -100,7 +100,7 @@ export function useAccounts() {
     async (id: string, update: AccountUpdate) => {
       const { error: e } = await supabase.from('accounts').update(update).eq('id', id)
       if (e) throw e
-      await fetchAccounts()
+      await fetchAccounts(true)
     },
     [fetchAccounts]
   )
@@ -109,7 +109,7 @@ export function useAccounts() {
     async (id: string) => {
       const { error: e } = await supabase.from('accounts').delete().eq('id', id)
       if (e) throw e
-      await fetchAccounts()
+      await fetchAccounts(true)
     },
     [fetchAccounts]
   )

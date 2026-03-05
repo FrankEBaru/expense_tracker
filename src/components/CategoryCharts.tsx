@@ -1,6 +1,7 @@
 import type { Transaction } from '../types/transaction'
 import type { Category } from '../types/category'
-import { getCategoryColor } from '../constants/colors'
+import { getCategoryColor, EXPENSE_CATEGORY_PALETTE } from '../constants/colors'
+import { formatCurrency } from '../utils/format'
 
 interface CategoryChartsProps {
   transactions: Transaction[]
@@ -45,7 +46,7 @@ function BarChart({
       ) : (
         <div className="space-y-1.5">
           {items.map((item, idx) => {
-            const barColor = getCategoryColor(item.id, categories, idx)
+            const barColor = getCategoryColor(item.id, categories, idx, EXPENSE_CATEGORY_PALETTE)
             return (
               <div key={item.id} className="flex items-center gap-1.5 min-w-0">
                 <span className="w-16 sm:w-20 shrink-0 text-xs text-gray-700 dark:text-gray-300 truncate" title={item.name}>
@@ -58,7 +59,7 @@ function BarChart({
                   />
                 </div>
                 <span className="w-12 sm:w-14 shrink-0 text-right text-xs font-medium text-gray-800 dark:text-gray-200 tabular-nums">
-                  ${item.total.toFixed(2)}
+                  ${formatCurrency(item.total)}
                 </span>
               </div>
             )

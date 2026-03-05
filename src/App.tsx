@@ -161,6 +161,15 @@ function App() {
               Insights
             </button>
           )}
+          {(view === 'dashboard' || view === 'insights') && (
+            <button
+              type="button"
+              onClick={openSettings}
+              className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              Settings
+            </button>
+          )}
           <button
             type="button"
             onClick={toggleTheme}
@@ -187,7 +196,6 @@ function App() {
             accountsLoading={accountsLoading}
             accountsError={accountsError}
             onAddTransaction={openAddForm}
-            onOpenSettings={openSettings}
             onEditTransaction={openEditForm}
             onMutationsReady={setTxMutations}
             onAccountsRefetch={refetchAccounts}

@@ -16,7 +16,8 @@ create index if not exists expenses_user_id_date_idx on public.expenses (user_id
 
 alter table public.expenses enable row level security;
 
--- Users can only access their own rows
+-- Users can only access their own rows (drop first so re-run is safe)
+drop policy if exists "Users can CRUD own expenses" on public.expenses;
 create policy "Users can CRUD own expenses"
   on public.expenses
   for all

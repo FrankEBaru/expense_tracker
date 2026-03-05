@@ -2,8 +2,10 @@ import { useState, useRef, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAccounts } from '../hooks/useAccounts'
 import { useCategories } from '../hooks/useCategories'
-import { CATEGORY_PALETTE } from '../constants/colors'
+import { formatCurrency } from '../utils/format'
+import { ACCOUNT_PALETTE, EXPENSE_CATEGORY_PALETTE, INCOME_CATEGORY_PALETTE, getAccountColor } from '../constants/colors'
 import type { Account } from '../types/account'
+import type { Category } from '../types/category'
 
 interface SettingsProps {
   onBack: () => void
@@ -28,13 +30,21 @@ export default function Settings({ onBack, onError }: SettingsProps) {
   const [accountForm, setAccountForm] = useState<Account | null | 'new'>(null)
   const [accountName, setAccountName] = useState('')
   const [accountInitialBalance, setAccountInitialBalance] = useState('0')
+  const [accountColor, setAccountColor] = useState<string | null>(null)
   const [expenseCategoryName, setExpenseCategoryName] = useState('')
   const [incomeCategoryName, setIncomeCategoryName] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [openAccountMenuId, setOpenAccountMenuId] = useState<string | null>(null)
-  const [openColorCategoryId, setOpenColorCategoryId] = useState<string | null>(null)
+  const [openCategoryMenuId, setOpenCategoryMenuId] = useState<string | null>(null)
+  const [categoryForm, setCategoryForm] = useState<Category | null>(null)
+  const [categoryEditName, setCategoryEditName] = useState('')
+  const [categoryEditColor, setCategoryEditColor] = useState<string | null>(null)
+  const [categorySaving, setCategorySaving] = useState(false)
   const accountMenuRef = useRef<HTMLDivElement | null>(null)
+  const categoryMenuRef = useRef<HTMLDivElement | null>(null)
+  const accountCustomColorInputRef = useRef<HTMLInputElement | null>(null)
+  const categoryEditColorInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     if (openAccountMenuId === null) return
@@ -45,10 +55,20 @@ export default function Settings({ onBack, onError }: SettingsProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [openAccountMenuId])
 
+  useEffect(() => {
+    if (openCategoryMenuId === null) return
+    function handleClickOutside(e: MouseEvent) {
+      if (categoryMenuRef.current && !categoryMenuRef.current.contains(e.target as Node)) setOpenCategoryMenuId(null)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [openCategoryMenuId])
+
   const openNewAccount = () => {
     setAccountForm('new')
     setAccountName('')
     setAccountInitialBalance('0')
+    setAccountColor(null)
     setError(null)
   }
 
@@ -56,10 +76,40 @@ export default function Settings({ onBack, onError }: SettingsProps) {
     setAccountForm(acc)
     setAccountName(acc.name)
     setAccountInitialBalance(String(acc.initial_balance))
+    setAccountColor(acc.color ?? null)
     setError(null)
   }
 
   const closeAccountForm = () => setAccountForm(null)
+
+  const openEditCategory = (c: Category) => {
+    setCategoryForm(c)
+    setCategoryEditName(c.name)
+    setCategoryEditColor(c.color ?? null)
+    setError(null)
+  }
+
+  const closeCategoryForm = () => setCategoryForm(null)
+
+  const handleSaveCategory = async () => {
+    if (!categoryForm || !categoryEditName.trim()) return
+    setError(null)
+    setCategorySaving(true)
+    try {
+      if (categoryForm.type === 'expense') {
+        await updateExpenseCategory(categoryForm.id, { name: categoryEditName.trim(), color: categoryEditColor ?? null })
+      } else {
+        await updateIncomeCategory(categoryForm.id, { name: categoryEditName.trim(), color: categoryEditColor ?? null })
+      }
+      closeCategoryForm()
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to save'
+      setError(msg)
+      onError?.(msg)
+    } finally {
+      setCategorySaving(false)
+    }
+  }
 
   const handleSaveAccount = async () => {
     setError(null)
@@ -83,9 +133,19 @@ export default function Settings({ onBack, onError }: SettingsProps) {
         return
       }
       if (accountForm === 'new') {
-        await addAccount({ user_id: session.user.id, name: accountName.trim(), initial_balance: num })
+        await addAccount({
+          user_id: session.user.id,
+          name: accountName.trim(),
+          initial_balance: num,
+          color: accountColor || undefined,
+        })
       } else if (accountForm) {
-        await updateAccount(accountForm.id, { name: accountName.trim(), initial_balance: num })
+        const update: { name: string; initial_balance: number; color: string | null } = {
+          name: accountName.trim(),
+          initial_balance: num,
+          color: accountColor ?? null,
+        }
+        await updateAccount(accountForm.id, update)
       }
       closeAccountForm()
     } catch (err) {
@@ -185,6 +245,13 @@ export default function Settings({ onBack, onError }: SettingsProps) {
 
   return (
     <div className="space-y-6">
+      <input
+        ref={accountCustomColorInputRef}
+        type="color"
+        className="sr-only w-0 h-0 opacity-0 absolute"
+        aria-hidden
+        onChange={(e) => setAccountColor(e.target.value)}
+      />
       <div className="flex items-center justify-between">
         <button
           type="button"
@@ -215,15 +282,20 @@ export default function Settings({ onBack, onError }: SettingsProps) {
         ) : (
           <>
             <ul className="space-y-2 mb-3">
-              {accounts.map((acc) => (
+              {accounts.map((acc, idx) => (
                 <li
                   key={acc.id}
                   className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center justify-between gap-2 flex-wrap"
                 >
-                  <div>
-                    <span className="font-medium text-gray-800 dark:text-gray-200">{acc.name}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span
+                      className="w-3 h-3 rounded-full shrink-0"
+                      style={{ backgroundColor: getAccountColor(acc, idx) }}
+                      title="Account color"
+                    />
+                    <span className="font-medium text-gray-800 dark:text-gray-200 truncate">{acc.name}</span>
                     <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
-                      Initial: ${Number(acc.initial_balance).toFixed(2)}
+                      Initial: ${formatCurrency(Number(acc.initial_balance))}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
@@ -297,42 +369,49 @@ export default function Settings({ onBack, onError }: SettingsProps) {
               key={c.id}
               className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center justify-between gap-2"
             >
-              <span className="text-gray-800 dark:text-gray-200 min-w-0 truncate">{c.name}</span>
-              <div className="flex items-center gap-2 shrink-0">
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setOpenColorCategoryId((id) => (id === c.id ? null : c.id))}
-                    className="w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-500 shadow-inner"
-                    style={{ backgroundColor: c.color ?? CATEGORY_PALETTE[0] }}
-                    title={openColorCategoryId === c.id ? 'Hide color picker' : 'Change color'}
-                  />
-                  {openColorCategoryId === c.id && (
-                    <div className="flex items-center gap-1">
-                      {CATEGORY_PALETTE.map((hex) => (
-                        <button
-                          key={hex}
-                          type="button"
-                          title={hex}
-                          onClick={() => {
-                            updateExpenseCategory(c.id, { color: hex })
-                            setOpenColorCategoryId(null)
-                          }}
-                          className={`w-5 h-5 rounded-full border-2 transition ${c.color === hex ? 'border-gray-800 dark:border-gray-200 scale-110' : 'border-transparent hover:border-gray-400'}`}
-                          style={{ backgroundColor: hex }}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
+              <div className="flex items-center gap-2 min-w-0">
+                <span
+                  className="w-3 h-3 rounded-full shrink-0"
+                  style={{ backgroundColor: c.color ?? EXPENSE_CATEGORY_PALETTE[0] }}
+                  title="Category color"
+                />
+                <span className="text-gray-800 dark:text-gray-200 truncate">{c.name}</span>
               </div>
-              <button
-                type="button"
-                onClick={() => handleDeleteExpenseCategory(c.id)}
-                className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm shrink-0"
-              >
-                Delete
-              </button>
+              <div className="relative shrink-0" ref={openCategoryMenuId === c.id ? categoryMenuRef : undefined}>
+                <button
+                  type="button"
+                  onClick={() => setOpenCategoryMenuId(openCategoryMenuId === c.id ? null : c.id)}
+                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm"
+                  aria-label="Actions"
+                  aria-expanded={openCategoryMenuId === c.id}
+                >
+                  ⋮
+                </button>
+                {openCategoryMenuId === c.id && (
+                  <div className="absolute right-0 top-full mt-1 z-20 min-w-[7rem] rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800 py-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        openEditCategory(c)
+                        setOpenCategoryMenuId(null)
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleDeleteExpenseCategory(c.id)
+                        setOpenCategoryMenuId(null)
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-700"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
             </li>
           ))}
         </ul>
@@ -365,42 +444,49 @@ export default function Settings({ onBack, onError }: SettingsProps) {
               key={c.id}
               className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center justify-between gap-2"
             >
-              <span className="text-gray-800 dark:text-gray-200 min-w-0 truncate">{c.name}</span>
-              <div className="flex items-center gap-2 shrink-0">
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setOpenColorCategoryId((id) => (id === c.id ? null : c.id))}
-                    className="w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-500 shadow-inner"
-                    style={{ backgroundColor: c.color ?? CATEGORY_PALETTE[0] }}
-                    title={openColorCategoryId === c.id ? 'Hide color picker' : 'Change color'}
-                  />
-                  {openColorCategoryId === c.id && (
-                    <div className="flex items-center gap-1">
-                      {CATEGORY_PALETTE.map((hex) => (
-                        <button
-                          key={hex}
-                          type="button"
-                          title={hex}
-                          onClick={() => {
-                            updateIncomeCategory(c.id, { color: hex })
-                            setOpenColorCategoryId(null)
-                          }}
-                          className={`w-5 h-5 rounded-full border-2 transition ${c.color === hex ? 'border-gray-800 dark:border-gray-200 scale-110' : 'border-transparent hover:border-gray-400'}`}
-                          style={{ backgroundColor: hex }}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
+              <div className="flex items-center gap-2 min-w-0">
+                <span
+                  className="w-3 h-3 rounded-full shrink-0"
+                  style={{ backgroundColor: c.color ?? INCOME_CATEGORY_PALETTE[0] }}
+                  title="Category color"
+                />
+                <span className="text-gray-800 dark:text-gray-200 truncate">{c.name}</span>
               </div>
-              <button
-                type="button"
-                onClick={() => handleDeleteIncomeCategory(c.id)}
-                className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm shrink-0"
-              >
-                Delete
-              </button>
+              <div className="relative shrink-0" ref={openCategoryMenuId === c.id ? categoryMenuRef : undefined}>
+                <button
+                  type="button"
+                  onClick={() => setOpenCategoryMenuId(openCategoryMenuId === c.id ? null : c.id)}
+                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm"
+                  aria-label="Actions"
+                  aria-expanded={openCategoryMenuId === c.id}
+                >
+                  ⋮
+                </button>
+                {openCategoryMenuId === c.id && (
+                  <div className="absolute right-0 top-full mt-1 z-20 min-w-[7rem] rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800 py-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        openEditCategory(c)
+                        setOpenCategoryMenuId(null)
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleDeleteIncomeCategory(c.id)
+                        setOpenCategoryMenuId(null)
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-700"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
             </li>
           ))}
         </ul>
@@ -451,6 +537,36 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-md"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {ACCOUNT_PALETTE.map((hex) => (
+                    <button
+                      key={hex}
+                      type="button"
+                      onClick={() => setAccountColor(hex)}
+                      className={`w-6 h-6 rounded-full border-2 transition ${accountColor === hex ? 'border-gray-800 dark:border-gray-200 scale-110' : 'border-transparent hover:border-gray-400'}`}
+                      style={{ backgroundColor: hex }}
+                      title={hex}
+                    />
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => accountCustomColorInputRef.current?.click()}
+                    className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center text-gray-500 text-xs font-bold"
+                    title="Custom color"
+                  >
+                    +
+                  </button>
+                  {accountColor && !(ACCOUNT_PALETTE as readonly string[]).includes(accountColor) && (
+                    <span
+                      className="w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-500 shrink-0"
+                      style={{ backgroundColor: accountColor }}
+                      title="Custom"
+                    />
+                  )}
+                </div>
+              </div>
               {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
               <div className="flex gap-2">
                 <button
@@ -467,6 +583,81 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                   className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {categoryForm && (
+        <div className="fixed inset-0 z-20 flex items-end sm:items-center justify-center bg-black/50 p-4">
+          <input
+            ref={categoryEditColorInputRef}
+            type="color"
+            className="sr-only w-0 h-0 opacity-0 absolute"
+            aria-hidden
+            onChange={(e) => setCategoryEditColor(e.target.value)}
+          />
+          <div className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-xl p-4">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Edit category</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={categoryEditName}
+                  onChange={(e) => setCategoryEditName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-md"
+                  placeholder="Category name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {(categoryForm.type === 'expense' ? EXPENSE_CATEGORY_PALETTE : INCOME_CATEGORY_PALETTE).map((hex) => (
+                    <button
+                      key={hex}
+                      type="button"
+                      onClick={() => setCategoryEditColor(hex)}
+                      className={`w-6 h-6 rounded-full border-2 transition ${categoryEditColor === hex ? 'border-gray-800 dark:border-gray-200 scale-110' : 'border-transparent hover:border-gray-400'}`}
+                      style={{ backgroundColor: hex }}
+                      title={hex}
+                    />
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => categoryEditColorInputRef.current?.click()}
+                    className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center text-gray-500 text-xs font-bold"
+                    title="Custom color"
+                  >
+                    +
+                  </button>
+                  {categoryEditColor && !((categoryForm.type === 'expense' ? EXPENSE_CATEGORY_PALETTE : INCOME_CATEGORY_PALETTE) as readonly string[]).includes(categoryEditColor) && (
+                    <span
+                      className="w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-500 shrink-0"
+                      style={{ backgroundColor: categoryEditColor }}
+                      title="Custom"
+                    />
+                  )}
+                </div>
+              </div>
+              {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={closeCategoryForm}
+                  className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveCategory}
+                  disabled={categorySaving}
+                  className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {categorySaving ? 'Saving…' : 'Save'}
                 </button>
               </div>
             </div>

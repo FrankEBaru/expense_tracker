@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import type { Transaction } from '../types/transaction'
 import type { Account } from '../types/account'
 import type { Category } from '../types/category'
+import { formatCurrency } from '../utils/format'
 
 interface TransactionListProps {
   transactions: Transaction[]
@@ -106,7 +107,7 @@ export default function TransactionList({
                     isExpense ? 'text-red-700 dark:text-red-400' : isTransfer ? 'text-gray-800 dark:text-gray-200' : 'text-green-700 dark:text-green-400'
                   }`}
                 >
-                  {isExpense ? '-' : ''}${amount.toFixed(2)}
+                  {isExpense ? '-' : ''}${formatCurrency(amount)}
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">{tx.type}</span>
                 <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
