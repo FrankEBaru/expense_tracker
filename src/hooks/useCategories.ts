@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Category, CategoryInsert, CategoryUpdate } from '../types/category'
 import type { CategoryType } from '../types/category'
+import { logInternalError, toUserErrorMessage } from '../utils/errors'
 
 export function useCategories(type: CategoryType) {
   const [categories, setCategories] = useState<Category[]>([])
@@ -18,7 +19,8 @@ export function useCategories(type: CategoryType) {
       .order('sort_order', { ascending: true })
       .order('name', { ascending: true })
     if (e) {
-      setError(e.message)
+      logInternalError('useCategories.fetchCategories', e)
+      setError(toUserErrorMessage(e, 'Could not load categories.'))
       setCategories([])
     } else {
       setCategories((data as Category[]) ?? [])

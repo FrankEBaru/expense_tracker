@@ -4,8 +4,11 @@ import { useAccounts } from '../hooks/useAccounts'
 import { useCategories } from '../hooks/useCategories'
 import { formatCurrency } from '../utils/format'
 import { ACCOUNT_PALETTE, EXPENSE_CATEGORY_PALETTE, INCOME_CATEGORY_PALETTE, getAccountColor } from '../constants/colors'
+import { ACCOUNT_NAME_MAX_LENGTH, CATEGORY_NAME_MAX_LENGTH, MAX_MONEY_AMOUNT } from '../constants/limits'
 import type { Account } from '../types/account'
 import type { Category } from '../types/category'
+import { logInternalError, toUserErrorMessage } from '../utils/errors'
+import { isHexColor, isUuid } from '../utils/validation'
 
 interface SettingsProps {
   onBack: () => void
@@ -95,17 +98,27 @@ export default function Settings({ onBack, onError }: SettingsProps) {
 
   const handleSaveCategory = async () => {
     if (!categoryForm || !categoryEditName.trim()) return
+    const trimmedName = categoryEditName.trim()
+    if (trimmedName.length > CATEGORY_NAME_MAX_LENGTH) {
+      setError(`Category name must be ${CATEGORY_NAME_MAX_LENGTH} characters or less`)
+      return
+    }
+    if (categoryEditColor && !isHexColor(categoryEditColor)) {
+      setError('Invalid color format')
+      return
+    }
     setError(null)
     setCategorySaving(true)
     try {
       if (categoryForm.type === 'expense') {
-        await updateExpenseCategory(categoryForm.id, { name: categoryEditName.trim(), color: categoryEditColor ?? null })
+        await updateExpenseCategory(categoryForm.id, { name: trimmedName, color: categoryEditColor ?? null })
       } else {
-        await updateIncomeCategory(categoryForm.id, { name: categoryEditName.trim(), color: categoryEditColor ?? null })
+        await updateIncomeCategory(categoryForm.id, { name: trimmedName, color: categoryEditColor ?? null })
       }
       closeCategoryForm()
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to save'
+      logInternalError('Settings.handleSaveCategory', err)
+      const msg = toUserErrorMessage(err, 'Failed to save')
       setError(msg)
       onError?.(msg)
     } finally {
@@ -116,34 +129,43 @@ export default function Settings({ onBack, onError }: SettingsProps) {
   const handleSaveAccount = async () => {
     setError(null)
     setSaving(true)
+    const trimmedName = accountName.trim()
     const num = parseFloat(accountInitialBalance)
-    if (Number.isNaN(num)) {
+    if (!Number.isFinite(num)) {
       setError('Enter a valid initial balance')
       setSaving(false)
       return
     }
-    if (!accountName.trim()) {
+    if (num > MAX_MONEY_AMOUNT || num < -MAX_MONEY_AMOUNT) {
+      setError('Initial balance is too large')
+      setSaving(false)
+      return
+    }
+    if (!trimmedName) {
       setError('Enter a name')
       setSaving(false)
       return
     }
+    if (trimmedName.length > ACCOUNT_NAME_MAX_LENGTH) {
+      setError(`Account name must be ${ACCOUNT_NAME_MAX_LENGTH} characters or less`)
+      setSaving(false)
+      return
+    }
+    if (accountColor && !isHexColor(accountColor)) {
+      setError('Invalid color format')
+      setSaving(false)
+      return
+    }
     try {
-      const session = (await supabase.auth.getSession()).data.session
-      if (!session?.user) {
-        setError('Not logged in')
-        setSaving(false)
-        return
-      }
       if (accountForm === 'new') {
         await addAccount({
-          user_id: session.user.id,
-          name: accountName.trim(),
+          name: trimmedName,
           initial_balance: num,
           color: accountColor || undefined,
         })
       } else if (accountForm) {
         const update: { name: string; initial_balance: number; color: string | null } = {
-          name: accountName.trim(),
+          name: trimmedName,
           initial_balance: num,
           color: accountColor ?? null,
         }
@@ -151,7 +173,8 @@ export default function Settings({ onBack, onError }: SettingsProps) {
       }
       closeAccountForm()
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to save'
+      logInternalError('Settings.handleSaveAccount', err)
+      const msg = toUserErrorMessage(err, 'Failed to save')
       setError(msg)
       onError?.(msg)
     } finally {
@@ -160,6 +183,10 @@ export default function Settings({ onBack, onError }: SettingsProps) {
   }
 
   const handleDeleteAccount = async (id: string) => {
+    if (!isUuid(id)) {
+      onError?.('Invalid account id.')
+      return
+    }
     const { data } = await supabase
       .from('transactions')
       .select('id')
@@ -173,7 +200,8 @@ export default function Settings({ onBack, onError }: SettingsProps) {
     try {
       await deleteAccount(id)
     } catch (err) {
-      onError?.(err instanceof Error ? err.message : 'Could not delete account.')
+      logInternalError('Settings.handleDeleteAccount', err)
+      onError?.(toUserErrorMessage(err, 'Could not delete account.'))
     }
   }
 
@@ -188,33 +216,35 @@ export default function Settings({ onBack, onError }: SettingsProps) {
 
   const handleSaveNewCategory = async () => {
     if (!addingCategoryType || !newCategoryName.trim()) return
+    const trimmedName = newCategoryName.trim()
+    if (trimmedName.length > CATEGORY_NAME_MAX_LENGTH) {
+      setError(`Category name must be ${CATEGORY_NAME_MAX_LENGTH} characters or less`)
+      return
+    }
+    if (newCategoryColor && !isHexColor(newCategoryColor)) {
+      setError('Invalid color format')
+      return
+    }
     setError(null)
     setSaving(true)
     try {
-      const session = (await supabase.auth.getSession()).data.session
-      if (!session?.user) {
-        setError('Not logged in')
-        setSaving(false)
-        return
-      }
       if (addingCategoryType === 'expense') {
         await addExpenseCategory({
-          user_id: session.user.id,
           type: 'expense',
-          name: newCategoryName.trim(),
+          name: trimmedName,
           color: newCategoryColor ?? null,
         })
       } else {
         await addIncomeCategory({
-          user_id: session.user.id,
           type: 'income',
-          name: newCategoryName.trim(),
+          name: trimmedName,
           color: newCategoryColor ?? null,
         })
       }
       closeAddCategory()
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to add category'
+      logInternalError('Settings.handleSaveNewCategory', err)
+      const msg = toUserErrorMessage(err, 'Failed to add category')
       setError(msg)
       onError?.(msg)
     } finally {
@@ -233,7 +263,8 @@ export default function Settings({ onBack, onError }: SettingsProps) {
     try {
       await deleteExpenseCategory(id)
     } catch (err) {
-      onError?.(err instanceof Error ? err.message : 'Could not delete category.')
+      logInternalError('Settings.handleDeleteExpenseCategory', err)
+      onError?.(toUserErrorMessage(err, 'Could not delete category.'))
     }
   }
 
@@ -248,7 +279,8 @@ export default function Settings({ onBack, onError }: SettingsProps) {
     try {
       await deleteIncomeCategory(id)
     } catch (err) {
-      onError?.(err instanceof Error ? err.message : 'Could not delete category.')
+      logInternalError('Settings.handleDeleteIncomeCategory', err)
+      onError?.(toUserErrorMessage(err, 'Could not delete category.'))
     }
   }
 
@@ -256,7 +288,8 @@ export default function Settings({ onBack, onError }: SettingsProps) {
     try {
       await updateAccount(acc.id, { hide_balance: !acc.hide_balance })
     } catch (err) {
-      onError?.(err instanceof Error ? err.message : 'Could not update account.')
+      logInternalError('Settings.handleToggleHideBalance', err)
+      onError?.(toUserErrorMessage(err, 'Could not update account.'))
     }
   }
 
@@ -521,6 +554,7 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                   type="text"
                   value={accountName}
                   onChange={(e) => setAccountName(e.target.value)}
+                  maxLength={ACCOUNT_NAME_MAX_LENGTH}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-md"
                   placeholder="e.g. Checking"
                 />
@@ -530,6 +564,8 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                 <input
                   type="number"
                   step="0.01"
+                  min={-MAX_MONEY_AMOUNT}
+                  max={MAX_MONEY_AMOUNT}
                   value={accountInitialBalance}
                   onChange={(e) => setAccountInitialBalance(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-md"
@@ -598,6 +634,7 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                   type="text"
                   value={newCategoryName}
                   onChange={(e) => setNewCategoryName(e.target.value)}
+                  maxLength={CATEGORY_NAME_MAX_LENGTH}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-md"
                   placeholder="Category name"
                 />
@@ -663,6 +700,7 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                   type="text"
                   value={categoryEditName}
                   onChange={(e) => setCategoryEditName(e.target.value)}
+                  maxLength={CATEGORY_NAME_MAX_LENGTH}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-md"
                   placeholder="Category name"
                 />

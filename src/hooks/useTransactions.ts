@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Transaction, TransactionInsert, TransactionUpdate } from '../types/transaction'
+import { logInternalError, toUserErrorMessage } from '../utils/errors'
+import { isUuid } from '../utils/validation'
 
 function getMonthBounds(ym: string) {
   const [y, m] = ym.split('-').map(Number)
@@ -30,13 +32,20 @@ export function useTransactions(selectedMonth: string, accountId: string | null 
       .order('created_at', { ascending: false })
 
     if (accountId) {
+      if (!isUuid(accountId)) {
+        setError('Invalid account filter.')
+        setTransactions([])
+        setLoading(false)
+        return
+      }
       query = query.or(`account_id.eq.${accountId},from_account_id.eq.${accountId},to_account_id.eq.${accountId}`)
     }
 
     const { data, error: e } = await query
 
     if (e) {
-      setError(e.message)
+      logInternalError('useTransactions.fetchTransactions', e)
+      setError(toUserErrorMessage(e, 'Could not load transactions.'))
       setTransactions([])
     } else {
       setTransactions((data ?? []) as Transaction[])

@@ -12,7 +12,6 @@ export interface Budget {
 }
 
 export interface BudgetInsert {
-  user_id: string
   name: string
   period_type: BudgetPeriodType
   amount: number

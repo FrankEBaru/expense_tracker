@@ -9,7 +9,6 @@ export interface Account {
 }
 
 export interface AccountInsert {
-  user_id: string
   name: string
   initial_balance?: number
   color?: string | null

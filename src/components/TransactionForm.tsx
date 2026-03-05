@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Transaction, TransactionType } from '../types/transaction'
+import type { Transaction, TransactionInsert, TransactionType } from '../types/transaction'
 import type { Account } from '../types/account'
 import type { Category } from '../types/category'
+import { MAX_MONEY_AMOUNT, TRANSACTION_DESCRIPTION_MAX_LENGTH } from '../constants/limits'
+import { logInternalError, toUserErrorMessage } from '../utils/errors'
 
 interface TransactionFormProps {
   transaction: Transaction | null
@@ -12,17 +14,7 @@ interface TransactionFormProps {
   onClose: () => void
   onSaved: () => void
   onError?: (message: string) => void
-  addTransaction: (insert: {
-    user_id: string
-    type: TransactionType
-    account_id?: string | null
-    category_id?: string | null
-    from_account_id?: string | null
-    to_account_id?: string | null
-    amount: number
-    date: string
-    description?: string | null
-  }) => Promise<void>
+  addTransaction: (insert: TransactionInsert) => Promise<void>
   updateTransaction: (
     id: string,
     update: {
@@ -108,8 +100,18 @@ export default function TransactionForm({
     setError(null)
     setSaving(true)
     const num = parseFloat(amount)
-    if (Number.isNaN(num) || num <= 0) {
+    if (!Number.isFinite(num) || num <= 0) {
       setError('Enter a valid amount')
+      setSaving(false)
+      return
+    }
+    if (num > MAX_MONEY_AMOUNT) {
+      setError('Amount is too large')
+      setSaving(false)
+      return
+    }
+    if (description.length > TRANSACTION_DESCRIPTION_MAX_LENGTH) {
+      setError(`Description must be ${TRANSACTION_DESCRIPTION_MAX_LENGTH} characters or less`)
       setSaving(false)
       return
     }
@@ -159,7 +161,6 @@ export default function TransactionForm({
       } else {
         if (type === 'transfer') {
           await addTransaction({
-            user_id: session.user.id,
             type: 'transfer',
             from_account_id: fromAccountId,
             to_account_id: toAccountId,
@@ -169,7 +170,6 @@ export default function TransactionForm({
           })
         } else {
           await addTransaction({
-            user_id: session.user.id,
             type,
             account_id: accountId,
             category_id: categoryId,
@@ -181,7 +181,8 @@ export default function TransactionForm({
       }
       onSaved()
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to save'
+      logInternalError('TransactionForm.handleSubmit', err)
+      const msg = toUserErrorMessage(err, 'Failed to save')
       setError(msg)
       onError?.(msg)
     } finally {
@@ -321,6 +322,7 @@ export default function TransactionForm({
               type="number"
               step="0.01"
               min="0.01"
+              max={MAX_MONEY_AMOUNT}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               required
@@ -349,6 +351,7 @@ export default function TransactionForm({
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              maxLength={TRANSACTION_DESCRIPTION_MAX_LENGTH}
               placeholder="e.g. Lunch at café"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />

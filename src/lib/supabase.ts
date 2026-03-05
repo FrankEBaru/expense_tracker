@@ -6,6 +6,16 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undef
 export const isSupabaseConfigured =
   !!supabaseUrl && !!supabaseAnonKey
 
+function createMissingConfigProxy(): SupabaseClient {
+  return new Proxy({} as SupabaseClient, {
+    get() {
+      throw new Error(
+        'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.'
+      )
+    },
+  })
+}
+
 export const supabase: SupabaseClient = isSupabaseConfigured
   ? createClient(supabaseUrl!, supabaseAnonKey!)
-  : (null as unknown as SupabaseClient)
+  : createMissingConfigProxy()

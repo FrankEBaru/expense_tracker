@@ -1,5 +1,4 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
 import { useBudgets } from '../hooks/useBudgets'
 import { useBudgetPeriodTransactions } from '../hooks/useBudgetPeriodTransactions'
 import { useCategories } from '../hooks/useCategories'
@@ -7,6 +6,8 @@ import { computeBudgetStatus } from '../utils/budgetPeriods'
 import { formatCurrency } from '../utils/format'
 import type { BudgetWithCategories } from '../types/budget'
 import type { BudgetPeriodType } from '../types/budget'
+import { BUDGET_NAME_MAX_LENGTH, MAX_MONEY_AMOUNT } from '../constants/limits'
+import { logInternalError, toUserErrorMessage } from '../utils/errors'
 
 interface BudgetsProps {
   onBack: () => void
@@ -99,8 +100,16 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
       setFormError('Enter a name')
       return
     }
-    if (Number.isNaN(amount) || amount < 0) {
+    if (name.length > BUDGET_NAME_MAX_LENGTH) {
+      setFormError(`Name must be ${BUDGET_NAME_MAX_LENGTH} characters or less`)
+      return
+    }
+    if (!Number.isFinite(amount) || amount < 0) {
       setFormError('Enter a valid amount')
+      return
+    }
+    if (amount > MAX_MONEY_AMOUNT) {
+      setFormError('Amount is too large')
       return
     }
     if (formCategoryIds.length === 0) {
@@ -109,13 +118,6 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
     }
     setSaving(true)
     try {
-      const { data: sessionData } = await supabase.auth.getSession()
-      const session = sessionData.session
-      if (!session?.user) {
-        setFormError('Not logged in')
-        setSaving(false)
-        return
-      }
       if (editingBudget) {
         await updateBudget(editingBudget.id, {
           name,
@@ -126,7 +128,6 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
         await setBudgetCategories(editingBudget.id, formCategoryIds)
       } else {
         const newId = await addBudget({
-          user_id: session.user.id,
           name,
           period_type: formPeriodType,
           amount,
@@ -137,7 +138,8 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
       }
       closeForm()
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to save'
+      logInternalError('Budgets.handleSaveBudget', err)
+      const msg = toUserErrorMessage(err, 'Failed to save')
       setFormError(msg)
       onError?.(msg)
     } finally {
@@ -151,7 +153,8 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
     try {
       await deleteBudget(id)
     } catch (err) {
-      onError?.(err instanceof Error ? err.message : 'Could not delete budget.')
+      logInternalError('Budgets.handleDeleteBudget', err)
+      onError?.(toUserErrorMessage(err, 'Could not delete budget.'))
     }
   }
 
@@ -335,6 +338,7 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
                   type="text"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
+                  maxLength={BUDGET_NAME_MAX_LENGTH}
                   placeholder="e.g. Groceries"
                   className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm"
                 />
@@ -362,6 +366,7 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
                   id="budget-amount"
                   type="number"
                   min="0"
+                  max={MAX_MONEY_AMOUNT}
                   step="0.01"
                   value={formAmount}
                   onChange={(e) => setFormAmount(e.target.value)}

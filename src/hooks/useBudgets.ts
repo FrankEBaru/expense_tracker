@@ -6,6 +6,7 @@ import type {
   BudgetUpdate,
   BudgetWithCategories,
 } from '../types/budget'
+import { logInternalError, toUserErrorMessage } from '../utils/errors'
 
 interface BudgetCategoryRow {
   budget_id: string
@@ -34,17 +35,26 @@ export function useBudgets() {
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true })
     if (e1) {
-      setError(e1.message)
+      logInternalError('useBudgets.fetchBudgets.budgets', e1)
+      setError(toUserErrorMessage(e1, 'Could not load budgets.'))
       setBudgets([])
       setLoading(false)
       return
     }
     const budgetsList = (budgetsData as Budget[]) ?? []
+    const budgetIds = budgetsList.map((budget) => budget.id)
+    if (budgetIds.length === 0) {
+      setBudgets([])
+      setLoading(false)
+      return
+    }
     const { data: linksData, error: e2 } = await supabase
       .from('budget_categories')
       .select('budget_id, category_id')
+      .in('budget_id', budgetIds)
     if (e2) {
-      setError(e2.message)
+      logInternalError('useBudgets.fetchBudgets.budgetCategories', e2)
+      setError(toUserErrorMessage(e2, 'Could not load budget categories.'))
       setBudgets([])
       setLoading(false)
       return

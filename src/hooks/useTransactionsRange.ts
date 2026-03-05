@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Transaction } from '../types/transaction'
+import { logInternalError, toUserErrorMessage } from '../utils/errors'
 
 export function useTransactionsRange(startDate: string, endDate: string) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -19,7 +20,8 @@ export function useTransactionsRange(startDate: string, endDate: string) {
       .order('created_at', { ascending: true })
 
     if (e) {
-      setError(e.message)
+      logInternalError('useTransactionsRange.fetchTransactions', e)
+      setError(toUserErrorMessage(e, 'Could not load transactions.'))
       setTransactions([])
     } else {
       setTransactions((data ?? []) as Transaction[])

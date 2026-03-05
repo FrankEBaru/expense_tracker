@@ -22,7 +22,6 @@ export interface TransactionWithDetails extends Transaction {
 }
 
 export interface TransactionInsert {
-  user_id: string
   type: TransactionType
   account_id?: string | null
   category_id?: string | null

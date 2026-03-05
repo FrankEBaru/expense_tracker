@@ -12,6 +12,7 @@ import CategoryCharts from './CategoryCharts'
 import CategoryFilterDropdown from './CategoryFilterDropdown'
 import { formatCurrency } from '../utils/format'
 import { getAccountColor } from '../constants/colors'
+import { logInternalError, toUserErrorMessage } from '../utils/errors'
 
 export type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc' | 'category'
 
@@ -152,7 +153,8 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
         onAccountsRefetch?.()
         await refetchBudgetTransactions()
       } catch (err) {
-        onError?.(err instanceof Error ? err.message : 'Could not delete transaction.')
+        logInternalError('Dashboard.handleDeleteTransaction', err)
+        onError?.(toUserErrorMessage(err, 'Could not delete transaction.'))
       }
     },
     [deleteTransaction, onAccountsRefetch, onError, refetchBudgetTransactions]

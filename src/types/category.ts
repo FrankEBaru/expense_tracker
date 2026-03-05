@@ -11,7 +11,6 @@ export interface Category {
 }
 
 export interface CategoryInsert {
-  user_id: string
   type: CategoryType
   name: string
   sort_order?: number

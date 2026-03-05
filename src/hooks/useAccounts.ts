@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Account, AccountInsert, AccountUpdate, AccountWithBalance } from '../types/account'
 import type { Transaction } from '../types/transaction'
+import { logInternalError, toUserErrorMessage } from '../utils/errors'
 
 function computeBalances(
   accounts: Account[],
@@ -44,7 +45,8 @@ export function useAccounts() {
       .select('*')
       .order('created_at', { ascending: true })
     if (e1) {
-      setError(e1.message)
+      logInternalError('useAccounts.fetchAccounts.accounts', e1)
+      setError(toUserErrorMessage(e1, 'Could not load accounts.'))
       setAccounts([])
       if (!quiet) setLoading(false)
       return
@@ -52,20 +54,20 @@ export function useAccounts() {
     const accountsList = (accountsData as Account[]) ?? []
     if (accountsList.length === 0) {
       const { error: insErr } = await supabase.from('accounts').insert({
-        user_id: userId,
         name: 'Default',
         initial_balance: 0,
       })
       if (insErr) {
-        setError(insErr.message)
+        logInternalError('useAccounts.fetchAccounts.insertDefaultAccount', insErr)
+        setError(toUserErrorMessage(insErr, 'Could not initialize your account.'))
         if (!quiet) setLoading(false)
         return
       }
       for (const name of DEFAULT_EXPENSE_CATEGORIES) {
-        await supabase.from('categories').insert({ user_id: userId, type: 'expense', name, sort_order: 0 })
+        await supabase.from('categories').insert({ type: 'expense', name, sort_order: 0 })
       }
       for (const name of DEFAULT_INCOME_CATEGORIES) {
-        await supabase.from('categories').insert({ user_id: userId, type: 'income', name, sort_order: 0 })
+        await supabase.from('categories').insert({ type: 'income', name, sort_order: 0 })
       }
       return fetchAccounts(quiet)
     }
@@ -73,7 +75,8 @@ export function useAccounts() {
       .from('transactions')
       .select('id, type, account_id, from_account_id, to_account_id, amount')
     if (e2) {
-      setError(e2.message)
+      logInternalError('useAccounts.fetchAccounts.transactions', e2)
+      setError(toUserErrorMessage(e2, 'Could not load account balances.'))
       setAccounts(accountsList.map((a) => ({ ...a, balance: Number(a.initial_balance) })))
       if (!quiet) setLoading(false)
       return

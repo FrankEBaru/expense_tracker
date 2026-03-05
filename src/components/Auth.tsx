@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { logInternalError, toUserErrorMessage } from '../utils/errors'
 
 type AuthMode = 'login' | 'signup'
 
@@ -13,11 +14,17 @@ export default function Auth({ onSuccess }: AuthProps) {
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null)
   const [loading, setLoading] = useState(false)
+  const [cooldownUntil, setCooldownUntil] = useState(0)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (Date.now() < cooldownUntil) {
+      setMessage({ type: 'error', text: 'Please wait a moment before trying again.' })
+      return
+    }
     setMessage(null)
     setLoading(true)
+    setCooldownUntil(Date.now() + 1500)
     try {
       if (mode === 'signup') {
         const { error } = await supabase.auth.signUp({ email, password })
@@ -29,9 +36,10 @@ export default function Auth({ onSuccess }: AuthProps) {
         onSuccess()
       }
     } catch (err) {
+      logInternalError('Auth.handleSubmit', err)
       setMessage({
         type: 'error',
-        text: err instanceof Error ? err.message : 'Something went wrong',
+        text: toUserErrorMessage(err, 'Something went wrong'),
       })
     } finally {
       setLoading(false)
