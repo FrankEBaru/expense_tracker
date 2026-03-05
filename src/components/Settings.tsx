@@ -260,6 +260,12 @@ export default function Settings({ onBack, onError }: SettingsProps) {
     }
   }
 
+  const hasCustomAccountColor = !!accountColor && !ACCOUNT_PALETTE.some((hex) => hex === accountColor)
+  const addCategoryPalette = addingCategoryType === 'expense' ? EXPENSE_CATEGORY_PALETTE : INCOME_CATEGORY_PALETTE
+  const hasCustomNewCategoryColor = !!newCategoryColor && !addCategoryPalette.some((hex) => hex === newCategoryColor)
+  const editCategoryPalette = categoryForm?.type === 'expense' ? EXPENSE_CATEGORY_PALETTE : INCOME_CATEGORY_PALETTE
+  const hasCustomEditCategoryColor = !!categoryEditColor && !editCategoryPalette.some((hex) => hex === categoryEditColor)
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -542,7 +548,10 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                       title={hex}
                     />
                   ))}
-                  <label className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0 cursor-pointer">
+                  <label
+                    className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0 cursor-pointer"
+                    style={{ backgroundColor: hasCustomAccountColor ? accountColor : undefined }}
+                  >
                     <input
                       type="color"
                       value={accountColor ?? ACCOUNT_PALETTE[0]}
@@ -596,7 +605,7 @@ export default function Settings({ onBack, onError }: SettingsProps) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  {(addingCategoryType === 'expense' ? EXPENSE_CATEGORY_PALETTE : INCOME_CATEGORY_PALETTE).map((hex) => (
+                  {addCategoryPalette.map((hex) => (
                     <button
                       key={hex}
                       type="button"
@@ -606,10 +615,13 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                       title={hex}
                     />
                   ))}
-                  <label className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0 cursor-pointer">
+                  <label
+                    className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0 cursor-pointer"
+                    style={{ backgroundColor: hasCustomNewCategoryColor ? newCategoryColor : undefined }}
+                  >
                     <input
                       type="color"
-                      value={newCategoryColor ?? (addingCategoryType === 'expense' ? EXPENSE_CATEGORY_PALETTE[0] : INCOME_CATEGORY_PALETTE[0])}
+                      value={newCategoryColor ?? addCategoryPalette[0]}
                       onChange={(e) => setNewCategoryColor(e.target.value)}
                       className="absolute opacity-0 w-0 h-0"
                     />
@@ -658,7 +670,7 @@ export default function Settings({ onBack, onError }: SettingsProps) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  {(categoryForm.type === 'expense' ? EXPENSE_CATEGORY_PALETTE : INCOME_CATEGORY_PALETTE).map((hex) => (
+                  {editCategoryPalette.map((hex) => (
                     <button
                       key={hex}
                       type="button"
@@ -668,10 +680,13 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                       title={hex}
                     />
                   ))}
-                  <label className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0 cursor-pointer">
+                  <label
+                    className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0 cursor-pointer"
+                    style={{ backgroundColor: hasCustomEditCategoryColor ? categoryEditColor : undefined }}
+                  >
                     <input
                       type="color"
-                      value={categoryEditColor ?? (categoryForm.type === 'expense' ? EXPENSE_CATEGORY_PALETTE[0] : INCOME_CATEGORY_PALETTE[0])}
+                      value={categoryEditColor ?? editCategoryPalette[0]}
                       onChange={(e) => setCategoryEditColor(e.target.value)}
                       className="absolute opacity-0 w-0 h-0"
                     />
