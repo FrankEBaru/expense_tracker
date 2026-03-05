@@ -81,6 +81,7 @@ export function VerticalBarChart<T extends { ym: string; label: string }>({
                 left: `${leftPct}%`,
                 top: 0,
                 transform: 'translateX(-50%)',
+                maxWidth: 220,
               }}
             >
               <p className={CHART_TOOLTIP_TITLE_CLASS}>{item.label}</p>

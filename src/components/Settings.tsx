@@ -31,8 +31,9 @@ export default function Settings({ onBack, onError }: SettingsProps) {
   const [accountName, setAccountName] = useState('')
   const [accountInitialBalance, setAccountInitialBalance] = useState('0')
   const [accountColor, setAccountColor] = useState<string | null>(null)
-  const [expenseCategoryName, setExpenseCategoryName] = useState('')
-  const [incomeCategoryName, setIncomeCategoryName] = useState('')
+  const [addingCategoryType, setAddingCategoryType] = useState<'expense' | 'income' | null>(null)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [newCategoryColor, setNewCategoryColor] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [openAccountMenuId, setOpenAccountMenuId] = useState<string | null>(null)
@@ -43,6 +44,9 @@ export default function Settings({ onBack, onError }: SettingsProps) {
   const [categorySaving, setCategorySaving] = useState(false)
   const accountMenuRef = useRef<HTMLDivElement | null>(null)
   const categoryMenuRef = useRef<HTMLDivElement | null>(null)
+  const accountCustomColorRef = useRef<HTMLInputElement>(null)
+  const categoryEditCustomColorRef = useRef<HTMLInputElement>(null)
+  const newCategoryCustomColorRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (openAccountMenuId === null) return
@@ -173,33 +177,48 @@ export default function Settings({ onBack, onError }: SettingsProps) {
     }
   }
 
-  const handleAddExpenseCategory = async () => {
-    if (!expenseCategoryName.trim()) return
+  const openAddCategory = (type: 'expense' | 'income') => {
+    setAddingCategoryType(type)
+    setNewCategoryName('')
+    setNewCategoryColor(null)
     setError(null)
-    try {
-      const session = (await supabase.auth.getSession()).data.session
-      if (!session?.user) return
-      await addExpenseCategory({ user_id: session.user.id, type: 'expense', name: expenseCategoryName.trim() })
-      setExpenseCategoryName('')
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to add category'
-      setError(msg)
-      onError?.(msg)
-    }
   }
 
-  const handleAddIncomeCategory = async () => {
-    if (!incomeCategoryName.trim()) return
+  const closeAddCategory = () => setAddingCategoryType(null)
+
+  const handleSaveNewCategory = async () => {
+    if (!addingCategoryType || !newCategoryName.trim()) return
     setError(null)
+    setSaving(true)
     try {
       const session = (await supabase.auth.getSession()).data.session
-      if (!session?.user) return
-      await addIncomeCategory({ user_id: session.user.id, type: 'income', name: incomeCategoryName.trim() })
-      setIncomeCategoryName('')
+      if (!session?.user) {
+        setError('Not logged in')
+        setSaving(false)
+        return
+      }
+      if (addingCategoryType === 'expense') {
+        await addExpenseCategory({
+          user_id: session.user.id,
+          type: 'expense',
+          name: newCategoryName.trim(),
+          color: newCategoryColor ?? null,
+        })
+      } else {
+        await addIncomeCategory({
+          user_id: session.user.id,
+          type: 'income',
+          name: newCategoryName.trim(),
+          color: newCategoryColor ?? null,
+        })
+      }
+      closeAddCategory()
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to add category'
       setError(msg)
       onError?.(msg)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -406,22 +425,13 @@ export default function Settings({ onBack, onError }: SettingsProps) {
             </li>
           ))}
         </ul>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={expenseCategoryName}
-            onChange={(e) => setExpenseCategoryName(e.target.value)}
-            placeholder="New category name"
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-          />
-          <button
-            type="button"
-            onClick={handleAddExpenseCategory}
-            className="py-2 px-4 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
-          >
-            Add
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => openAddCategory('expense')}
+          className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+        >
+          + Add expense category
+        </button>
       </section>
 
       <section>
@@ -481,22 +491,13 @@ export default function Settings({ onBack, onError }: SettingsProps) {
             </li>
           ))}
         </ul>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={incomeCategoryName}
-            onChange={(e) => setIncomeCategoryName(e.target.value)}
-            placeholder="New category name"
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-          />
-          <button
-            type="button"
-            onClick={handleAddIncomeCategory}
-            className="py-2 px-4 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
-          >
-            Add
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => openAddCategory('income')}
+          className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+        >
+          + Add income category
+        </button>
       </section>
 
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
@@ -542,14 +543,22 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                     />
                   ))}
                   <input
+                    ref={accountCustomColorRef}
                     type="color"
                     value={accountColor ?? ACCOUNT_PALETTE[0]}
                     onChange={(e) => setAccountColor(e.target.value)}
-                    className="min-w-[44px] min-h-[44px] w-10 h-10 rounded border border-gray-300 dark:border-gray-500 cursor-pointer bg-transparent"
-                    title="Custom color"
+                    className="sr-only"
                     aria-label="Choose custom color"
                   />
-                  <span className="text-xs text-gray-500 dark:text-gray-400">Custom</span>
+                  <button
+                    type="button"
+                    onClick={() => accountCustomColorRef.current?.click()}
+                    className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0"
+                    title="Custom color"
+                    aria-label="Choose custom color"
+                  >
+                    <span className="text-sm font-medium leading-none">+</span>
+                  </button>
                 </div>
               </div>
               {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
@@ -564,6 +573,78 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                 <button
                   type="button"
                   onClick={handleSaveAccount}
+                  disabled={saving}
+                  className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {addingCategoryType && (
+        <div className="fixed inset-0 z-20 flex items-end sm:items-center justify-center bg-black/50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-xl p-4">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+              {addingCategoryType === 'expense' ? 'Add expense category' : 'Add income category'}
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-md"
+                  placeholder="Category name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {(addingCategoryType === 'expense' ? EXPENSE_CATEGORY_PALETTE : INCOME_CATEGORY_PALETTE).map((hex) => (
+                    <button
+                      key={hex}
+                      type="button"
+                      onClick={() => setNewCategoryColor(hex)}
+                      className={`w-6 h-6 rounded-full border-2 transition ${newCategoryColor === hex ? 'border-gray-800 dark:border-gray-200 scale-110' : 'border-transparent hover:border-gray-400'}`}
+                      style={{ backgroundColor: hex }}
+                      title={hex}
+                    />
+                  ))}
+                  <input
+                    ref={newCategoryCustomColorRef}
+                    type="color"
+                    value={newCategoryColor ?? (addingCategoryType === 'expense' ? EXPENSE_CATEGORY_PALETTE[0] : INCOME_CATEGORY_PALETTE[0])}
+                    onChange={(e) => setNewCategoryColor(e.target.value)}
+                    className="sr-only"
+                    aria-label="Choose custom color"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => newCategoryCustomColorRef.current?.click()}
+                    className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0"
+                    title="Custom color"
+                    aria-label="Choose custom color"
+                  >
+                    <span className="text-sm font-medium leading-none">+</span>
+                  </button>
+                </div>
+              </div>
+              {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={closeAddCategory}
+                  className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveNewCategory}
                   disabled={saving}
                   className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                 >
@@ -604,14 +685,22 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                     />
                   ))}
                   <input
+                    ref={categoryEditCustomColorRef}
                     type="color"
                     value={categoryEditColor ?? (categoryForm.type === 'expense' ? EXPENSE_CATEGORY_PALETTE[0] : INCOME_CATEGORY_PALETTE[0])}
                     onChange={(e) => setCategoryEditColor(e.target.value)}
-                    className="min-w-[44px] min-h-[44px] w-10 h-10 rounded border border-gray-300 dark:border-gray-500 cursor-pointer bg-transparent"
-                    title="Custom color"
+                    className="sr-only"
                     aria-label="Choose custom color"
                   />
-                  <span className="text-xs text-gray-500 dark:text-gray-400">Custom</span>
+                  <button
+                    type="button"
+                    onClick={() => categoryEditCustomColorRef.current?.click()}
+                    className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0"
+                    title="Custom color"
+                    aria-label="Choose custom color"
+                  >
+                    <span className="text-sm font-medium leading-none">+</span>
+                  </button>
                 </div>
               </div>
               {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}

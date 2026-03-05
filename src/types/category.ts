@@ -15,6 +15,7 @@ export interface CategoryInsert {
   type: CategoryType
   name: string
   sort_order?: number
+  color?: string | null
 }
 
 export interface CategoryUpdate {

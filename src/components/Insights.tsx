@@ -767,8 +767,8 @@ function CategoryOverTimeSection({
                     className="w-2 h-2 rounded-full shrink-0"
                     style={{ backgroundColor: getCategoryColor(s.id, categories, i, palette) }}
                   />
-                  <span className="truncate">{s.name}:</span>
-                  <span className="tabular-nums">${formatCurrency(s.total)}</span>
+                  <span className="truncate min-w-0" title={s.name}>{s.name}:</span>
+                  <span className="tabular-nums shrink-0">${formatCurrency(s.total)}</span>
                 </li>
               ))}
             </ul>
