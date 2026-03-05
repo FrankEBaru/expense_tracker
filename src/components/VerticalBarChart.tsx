@@ -18,15 +18,6 @@ export interface VerticalBarChartProps<T extends { ym: string; label: string }> 
 
 const barChart = CHART.barChart
 
-function computeChartHeight(hasLegend: boolean): number {
-  return (
-    barChart.tooltipReserveHeight +
-    barChart.barHeight +
-    barChart.monthLabelHeight +
-    (hasLegend ? 8 + barChart.legendRowHeight : 0)
-  )
-}
-
 export function VerticalBarChart<T extends { ym: string; label: string }>({
   data,
   getSegments,
@@ -51,14 +42,12 @@ export function VerticalBarChart<T extends { ym: string; label: string }>({
     return <p className="text-xs text-gray-400 dark:text-gray-500">{emptyMessage}</p>
   }
 
-  const chartHeight = computeChartHeight(legendItems.length > 0)
   const hasLegend = legendItems.length > 0
 
   return (
     <div
-      className="relative min-w-0 w-full overflow-y-hidden"
+      className="relative min-w-0 w-full overflow-visible"
       style={{
-        height: chartHeight,
         marginTop: CHART.section.chartMarginTop,
         paddingLeft: barChart.horizontalPadding,
         paddingRight: barChart.horizontalPadding,

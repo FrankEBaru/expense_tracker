@@ -110,7 +110,7 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
   const { categories: expenseCategories } = useCategories('expense')
   const { categories: incomeCategories } = useCategories('income')
   const { budgets, loading: budgetsLoading } = useBudgets()
-  const { getTransactionsForPeriod, loading: budgetTxLoading } = useBudgetPeriodTransactions()
+  const { getTransactionsForPeriod, loading: budgetTxLoading, refetch: refetchBudgetTransactions } = useBudgetPeriodTransactions()
 
   const budgetStatuses = useMemo(() => {
     const map = new Map<string, ReturnType<typeof computeBudgetStatus>>()
@@ -122,20 +122,40 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
     return map
   }, [budgets, getTransactionsForPeriod])
 
+  const addTransactionAndRefresh = useCallback(
+    async (insert: import('../types/transaction').TransactionInsert) => {
+      await addTransaction(insert)
+      onAccountsRefetch?.()
+      await refetchBudgetTransactions()
+    },
+    [addTransaction, onAccountsRefetch, refetchBudgetTransactions]
+  )
+
+  const updateTransactionAndRefresh = useCallback(
+    async (id: string, update: import('../types/transaction').TransactionUpdate) => {
+      await updateTransaction(id, update)
+      onAccountsRefetch?.()
+      await refetchBudgetTransactions()
+    },
+    [updateTransaction, onAccountsRefetch, refetchBudgetTransactions]
+  )
+
   useEffect(() => {
-    onMutationsReady?.({ addTransaction, updateTransaction })
-  }, [addTransaction, updateTransaction, onMutationsReady])
+    onMutationsReady?.({ addTransaction: addTransactionAndRefresh, updateTransaction: updateTransactionAndRefresh })
+  }, [addTransactionAndRefresh, updateTransactionAndRefresh, onMutationsReady])
 
   const handleDeleteTransaction = useCallback(
     async (id: string) => {
+      if (!window.confirm('Delete this transaction?')) return
       try {
         await deleteTransaction(id)
         onAccountsRefetch?.()
+        await refetchBudgetTransactions()
       } catch (err) {
         onError?.(err instanceof Error ? err.message : 'Could not delete transaction.')
       }
     },
-    [deleteTransaction, onAccountsRefetch, onError]
+    [deleteTransaction, onAccountsRefetch, onError, refetchBudgetTransactions]
   )
 
   const prevMonth = () => {

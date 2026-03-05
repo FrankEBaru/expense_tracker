@@ -142,10 +142,8 @@ export default function TransactionList({
                   <button
                     type="button"
                     onClick={() => {
-                      if (window.confirm('Delete this transaction?')) {
-                        onDelete(tx.id)
-                        setOpenMenuTxId(null)
-                      }
+                      onDelete(tx.id)
+                      setOpenMenuTxId(null)
                     }}
                     className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-700"
                   >
