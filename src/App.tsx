@@ -5,6 +5,7 @@ import Auth from './components/Auth'
 import Dashboard from './components/Dashboard'
 import Insights from './components/Insights'
 import Settings from './components/Settings'
+import Budgets from './components/Budgets'
 import TransactionForm from './components/TransactionForm'
 import { useAccounts } from './hooks/useAccounts'
 import { useCategories } from './hooks/useCategories'
@@ -12,7 +13,7 @@ import type { Transaction } from './types/transaction'
 import type { TransactionInsert } from './types/transaction'
 import type { TransactionUpdate } from './types/transaction'
 
-type View = 'dashboard' | 'settings' | 'insights'
+type View = 'dashboard' | 'settings' | 'insights' | 'budgets'
 
 function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -67,7 +68,7 @@ function App() {
 
   const prevViewRef = useRef<View>(view)
   useEffect(() => {
-    if ((prevViewRef.current === 'settings' || prevViewRef.current === 'insights') && view === 'dashboard') {
+    if ((prevViewRef.current === 'settings' || prevViewRef.current === 'insights' || prevViewRef.current === 'budgets') && view === 'dashboard') {
       refetchAccounts()
       refetchExpenseCategories()
       refetchIncomeCategories()
@@ -116,6 +117,8 @@ function App() {
   const closeSettings = useCallback(() => setView('dashboard'), [])
   const openInsights = useCallback(() => setView('insights'), [])
   const closeInsights = useCallback(() => setView('dashboard'), [])
+  const openBudgets = useCallback(() => setView('budgets'), [])
+  const closeBudgets = useCallback(() => setView('dashboard'), [])
 
   if (!isSupabaseConfigured) {
     return (
@@ -149,19 +152,28 @@ function App() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
       <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-          {view === 'dashboard' ? 'Finance' : view === 'insights' ? 'Insights' : 'Settings'}
+          {view === 'dashboard' ? 'Finance' : view === 'insights' ? 'Insights' : view === 'budgets' ? 'Budgets' : 'Settings'}
         </h1>
         <div className="flex items-center gap-3">
           {view === 'dashboard' && (
-            <button
-              type="button"
-              onClick={openInsights}
-              className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              Insights
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={openBudgets}
+                className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                Budgets
+              </button>
+              <button
+                type="button"
+                onClick={openInsights}
+                className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                Insights
+              </button>
+            </>
           )}
-          {(view === 'dashboard' || view === 'insights') && (
+          {(view === 'dashboard' || view === 'insights' || view === 'budgets') && (
             <button
               type="button"
               onClick={openSettings}
@@ -200,10 +212,12 @@ function App() {
             onMutationsReady={setTxMutations}
             onAccountsRefetch={refetchAccounts}
             onError={showToast}
+            onOpenBudgets={openBudgets}
           />
         )}
         {view === 'settings' && <Settings onBack={closeSettings} onError={showToast} />}
         {view === 'insights' && <Insights onBack={closeInsights} />}
+        {view === 'budgets' && <Budgets onBack={closeBudgets} onError={showToast} />}
       </main>
 
       {view === 'dashboard' && (

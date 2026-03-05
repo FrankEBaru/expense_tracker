@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTransactions } from '../hooks/useTransactions'
 import { useCategories } from '../hooks/useCategories'
+import { useBudgets } from '../hooks/useBudgets'
+import { useBudgetPeriodTransactions } from '../hooks/useBudgetPeriodTransactions'
+import { computeBudgetStatus } from '../utils/budgetPeriods'
 import type { AccountWithBalance } from '../types/account'
 import type { Transaction } from '../types/transaction'
 import type { Category } from '../types/category'
@@ -84,9 +87,10 @@ interface DashboardProps {
   onMutationsReady?: (mutations: TransactionMutations) => void
   onAccountsRefetch?: () => void
   onError?: (message: string) => void
+  onOpenBudgets?: () => void
 }
 
-export default function Dashboard({ accounts, accountsLoading, accountsError, onAddTransaction: _onAddTransaction, onEditTransaction, onMutationsReady, onAccountsRefetch, onError }: DashboardProps) {
+export default function Dashboard({ accounts, accountsLoading, accountsError, onAddTransaction: _onAddTransaction, onEditTransaction, onMutationsReady, onAccountsRefetch, onError, onOpenBudgets }: DashboardProps) {
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
@@ -105,6 +109,18 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
   } = useTransactions(selectedMonth, selectedAccountId)
   const { categories: expenseCategories } = useCategories('expense')
   const { categories: incomeCategories } = useCategories('income')
+  const { budgets, loading: budgetsLoading } = useBudgets()
+  const { getTransactionsForPeriod, loading: budgetTxLoading } = useBudgetPeriodTransactions()
+
+  const budgetStatuses = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof computeBudgetStatus>>()
+    for (const budget of budgets) {
+      const current = getTransactionsForPeriod(budget.period_type, 'current')
+      const previous = getTransactionsForPeriod(budget.period_type, 'previous')
+      map.set(budget.id, computeBudgetStatus(budget, budget.category_ids, current, previous))
+    }
+    return map
+  }, [budgets, getTransactionsForPeriod])
 
   useEffect(() => {
     onMutationsReady?.({ addTransaction, updateTransaction })
@@ -221,6 +237,58 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
               })}
             </ul>
           </>
+        )}
+      </section>
+
+      <section className="border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-800">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300">Budgets</h2>
+          {onOpenBudgets && (
+            <button
+              type="button"
+              onClick={onOpenBudgets}
+              className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              View all
+            </button>
+          )}
+        </div>
+        {budgetsLoading || budgetTxLoading ? (
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Loading…</p>
+        ) : budgets.length === 0 ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            No budgets set. Set up budgets to track spending.{' '}
+            {onOpenBudgets && (
+              <button
+                type="button"
+                onClick={onOpenBudgets}
+                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+              >
+                Set up
+              </button>
+            )}
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {budgets.map((budget) => {
+              const status = budgetStatuses.get(budget.id)
+              if (!status) return null
+              return (
+                <li key={budget.id} className="flex items-center justify-between gap-2 text-sm">
+                  <span className="font-medium text-gray-800 dark:text-gray-200 truncate">{budget.name}</span>
+                  {status.isOver ? (
+                    <span className="font-medium text-red-600 dark:text-red-400 shrink-0">
+                      ${formatCurrency(-status.remaining)} over
+                    </span>
+                  ) : (
+                    <span className="font-medium text-green-600 dark:text-green-400 shrink-0">
+                      ${formatCurrency(status.remaining)} left
+                    </span>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
         )}
       </section>
 
