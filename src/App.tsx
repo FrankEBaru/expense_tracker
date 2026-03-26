@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard'
 import Insights from './components/Insights'
 import Settings from './components/Settings'
 import Budgets from './components/Budgets'
+import ResetPassword from './components/ResetPassword'
 import TransactionForm from './components/TransactionForm'
 import { useAccounts } from './hooks/useAccounts'
 import { useCategories } from './hooks/useCategories'
@@ -13,7 +14,7 @@ import type { Transaction } from './types/transaction'
 import type { TransactionInsert } from './types/transaction'
 import type { TransactionUpdate } from './types/transaction'
 
-type View = 'dashboard' | 'settings' | 'insights' | 'budgets'
+type View = 'dashboard' | 'settings' | 'insights' | 'budgets' | 'resetPassword'
 
 function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -83,8 +84,11 @@ function App() {
     })
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
+      if (event === 'PASSWORD_RECOVERY') {
+        setView('resetPassword')
+      }
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -218,6 +222,12 @@ function App() {
         {view === 'settings' && <Settings onBack={closeSettings} onError={showToast} />}
         {view === 'insights' && <Insights onBack={closeInsights} />}
         {view === 'budgets' && <Budgets onBack={closeBudgets} onError={showToast} />}
+        {view === 'resetPassword' && (
+          <ResetPassword
+            onDone={() => setView('dashboard')}
+            onError={showToast}
+          />
+        )}
       </main>
 
       {view === 'dashboard' && (
