@@ -375,7 +375,7 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
         <div
           className="ui-card-inner"
           style={{
-            background: '#ffffff',
+            background: 'var(--color-bg-card)',
             padding: 12,
             borderRadius: 16,
             border: '1px solid var(--border-softer)',
@@ -391,7 +391,7 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
         <div
           className="ui-card-inner"
           style={{
-            background: '#ffffff',
+            background: 'var(--color-bg-card)',
             padding: 12,
             borderRadius: 16,
             border: '1px solid var(--border-softer)',
@@ -407,7 +407,7 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
         <div
           className="ui-card-inner"
           style={{
-            background: '#ffffff',
+            background: 'var(--color-bg-card)',
             padding: 12,
             borderRadius: 16,
             border: '1px solid var(--border-softer)',
