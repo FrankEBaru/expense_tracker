@@ -381,10 +381,10 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
             border: '1px solid rgba(61,171,106,0.52)',
           }}
         >
-          <p className="text-xs" style={{ color: 'var(--text-positive)', fontWeight: 900 }}>
+          <p className="text-xs" style={{ color: '#ffffff', fontWeight: 900 }}>
             Income
           </p>
-          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-positive)', fontVariantNumeric: 'tabular-nums' }}>
             ${formatCurrency(summary.income)}
           </p>
         </div>
@@ -397,16 +397,33 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
             border: '1px solid rgba(232,52,74,0.48)',
           }}
         >
-          <p className="text-xs" style={{ color: 'var(--text-negative)', fontWeight: 900 }}>
+          <p className="text-xs" style={{ color: '#ffffff', fontWeight: 900 }}>
             Expenses
           </p>
-          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-negative)', fontVariantNumeric: 'tabular-nums' }}>
             ${formatCurrency(summary.expenses)}
           </p>
         </div>
-        <div className="ui-card-inner" style={{ background: 'var(--color-bg-secondary)', padding: 12, borderRadius: 16, border: '1px solid var(--border-softer)' }}>
-          <p className="text-xs" style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>Net</p>
-          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+        <div
+          className="ui-card-inner"
+          style={{
+            background: 'rgba(17, 17, 17, 0.78)',
+            padding: 12,
+            borderRadius: 16,
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+          }}
+        >
+          <p className="text-xs" style={{ color: '#ffffff', fontWeight: 700 }}>
+            Net
+          </p>
+          <p
+            className="text-sm font-semibold"
+            style={{
+              color:
+                summary.net > 0 ? 'var(--text-positive)' : summary.net < 0 ? 'var(--text-negative)' : 'var(--text-primary)',
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
             ${formatCurrency(summary.net)}
           </p>
         </div>
