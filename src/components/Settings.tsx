@@ -1,15 +1,14 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAccounts } from '../hooks/useAccounts'
 import { useCategories } from '../hooks/useCategories'
-import { formatCurrency } from '../utils/format'
 import { ACCOUNT_PALETTE, EXPENSE_CATEGORY_PALETTE, INCOME_CATEGORY_PALETTE, getAccountColor } from '../constants/colors'
 import { ACCOUNT_NAME_MAX_LENGTH, CATEGORY_NAME_MAX_LENGTH, MAX_MONEY_AMOUNT } from '../constants/limits'
 import type { Account } from '../types/account'
 import type { Category } from '../types/category'
 import { logInternalError, toUserErrorMessage } from '../utils/errors'
 import { isHexColor, isUuid } from '../utils/validation'
-import { IconMoon, IconSun } from './ui/icons'
+import { IconBank, IconMoon, IconSun, IconTag, IconWallet } from './ui/icons'
 
 interface SettingsProps {
   onBack: () => void
@@ -18,7 +17,29 @@ interface SettingsProps {
   onToggleTheme: () => void
 }
 
-export default function Settings({ onBack, onError, dark, onToggleTheme }: SettingsProps) {
+function SettingsSheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
+      <div className="ui-sheet w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between" style={{ padding: 16, borderBottom: '1px solid var(--border-softer)' }}>
+          <h2 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)' }}>{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="ui-btn ui-btn-ghost"
+            style={{ minHeight: 36, width: 40, padding: 0, textTransform: 'none', letterSpacing: 0 }}
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+export default function Settings({ onBack: _onBack, onError, dark, onToggleTheme }: SettingsProps) {
   const { accounts, loading: accountsLoading, addAccount, updateAccount, deleteAccount } = useAccounts()
   const {
     categories: expenseCategories,
@@ -304,11 +325,6 @@ export default function Settings({ onBack, onError, dark, onToggleTheme }: Setti
 
   return (
     <div className="space-y-6">
-      {(() => {
-        void onBack
-        return null
-      })()}
-
       <section className="ui-card" style={{ padding: 'var(--space-card)' }}>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
@@ -358,29 +374,36 @@ export default function Settings({ onBack, onError, dark, onToggleTheme }: Setti
                 <li
                   key={acc.id}
                   className="ui-card"
-                  style={{ padding: 12 }}
+                  style={{ padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}
                 >
-                  <div className="flex flex-1 min-w-0 items-center gap-2 flex-wrap">
-                    <span
-                      className="w-3 h-3 rounded-full shrink-0"
-                      style={{ backgroundColor: getAccountColor(acc, idx) }}
-                      title="Account color"
-                    />
-                    <span className="font-medium truncate" style={{ color: 'var(--text-primary)' }}>{acc.name}</span>
-                    <span className="text-sm ml-2" style={{ color: 'var(--text-secondary)' }}>
-                      Initial: ${formatCurrency(Number(acc.initial_balance))}
-                    </span>
+                  <div
+                    className="shrink-0 flex items-center justify-center"
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 12,
+                      background: getAccountColor(acc, idx),
+                      color: '#ffffff',
+                      border: '1px solid rgba(255,255,255,0.22)',
+                    }}
+                    aria-hidden
+                  >
+                    {idx === 0 ? <IconBank size={18} strokeWidth={1.8} /> : <IconWallet size={18} strokeWidth={1.8} />}
                   </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: 'var(--text-secondary)' }}>
-                      <input
-                        type="checkbox"
-                        checked={!!acc.hide_balance}
-                        onChange={() => void handleToggleHideBalance(acc)}
-                        className="rounded"
-                      />
-                      Hide balance
-                    </label>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                      {acc.name}
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <button
+                      type="button"
+                      className="ui-switch"
+                      role="switch"
+                      aria-checked={!!acc.hide_balance}
+                      aria-label={`Hide balance for ${acc.name}`}
+                      onClick={() => void handleToggleHideBalance(acc)}
+                    />
                     <div className="relative shrink-0" ref={openAccountMenuId === acc.id ? accountMenuRef : undefined}>
                       <button
                         type="button"
@@ -447,15 +470,26 @@ export default function Settings({ onBack, onError, dark, onToggleTheme }: Setti
             <li
               key={c.id}
               className="ui-card"
-              style={{ padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
+              style={{ padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}
             >
-              <div className="flex items-center gap-2 min-w-0">
-                <span
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ backgroundColor: c.color ?? EXPENSE_CATEGORY_PALETTE[0] }}
-                  title="Category color"
-                />
-                <span className="truncate" style={{ color: 'var(--text-primary)' }}>{c.name}</span>
+              <div
+                className="shrink-0 flex items-center justify-center"
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  background: c.color ?? EXPENSE_CATEGORY_PALETTE[0],
+                  color: '#ffffff',
+                  border: '1px solid rgba(255,255,255,0.22)',
+                }}
+                aria-hidden
+              >
+                <IconTag size={18} strokeWidth={1.8} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate" style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
+                  {c.name}
+                </div>
               </div>
               <div className="relative shrink-0" ref={openCategoryMenuId === c.id ? categoryMenuRef : undefined}>
                 <button
@@ -520,15 +554,26 @@ export default function Settings({ onBack, onError, dark, onToggleTheme }: Setti
             <li
               key={c.id}
               className="ui-card"
-              style={{ padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
+              style={{ padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}
             >
-              <div className="flex items-center gap-2 min-w-0">
-                <span
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ backgroundColor: c.color ?? INCOME_CATEGORY_PALETTE[0] }}
-                  title="Category color"
-                />
-                <span className="truncate" style={{ color: 'var(--text-primary)' }}>{c.name}</span>
+              <div
+                className="shrink-0 flex items-center justify-center"
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  background: c.color ?? INCOME_CATEGORY_PALETTE[0],
+                  color: '#ffffff',
+                  border: '1px solid rgba(255,255,255,0.22)',
+                }}
+                aria-hidden
+              >
+                <IconTag size={18} strokeWidth={1.8} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate" style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
+                  {c.name}
+                </div>
               </div>
               <div className="relative shrink-0" ref={openCategoryMenuId === c.id ? categoryMenuRef : undefined}>
                 <button
@@ -581,220 +626,253 @@ export default function Settings({ onBack, onError, dark, onToggleTheme }: Setti
         </button>
       </section>
 
-      {error && <p className="text-sm" style={{ color: 'var(--text-negative)' }}>{error}</p>}
+      {error && !accountForm && !addingCategoryType && !categoryForm && (
+        <p className="text-sm" style={{ color: 'var(--text-negative)' }}>
+          {error}
+        </p>
+      )}
 
       {accountForm && (
-        <div className="fixed inset-0 z-20 flex items-end sm:items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-xl p-4">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
-              {accountForm === 'new' ? 'Add account' : 'Edit account'}
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
-                <input
-                  type="text"
-                  value={accountName}
-                  onChange={(e) => setAccountName(e.target.value)}
-                  maxLength={ACCOUNT_NAME_MAX_LENGTH}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-md"
-                  placeholder="e.g. Checking"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Initial balance</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min={-MAX_MONEY_AMOUNT}
-                  max={MAX_MONEY_AMOUNT}
-                  value={accountInitialBalance}
-                  onChange={(e) => setAccountInitialBalance(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {ACCOUNT_PALETTE.map((hex) => (
-                    <button
-                      key={hex}
-                      type="button"
-                      onClick={() => setAccountColor(hex)}
-                      className={`w-6 h-6 rounded-full border-2 transition ${accountColor === hex ? 'border-gray-800 dark:border-gray-200 scale-110' : 'border-transparent hover:border-gray-400'}`}
-                      style={{ backgroundColor: hex }}
-                      title={hex}
-                    />
-                  ))}
-                  <label
-                    className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0 cursor-pointer"
-                    style={{ backgroundColor: hasCustomAccountColor ? accountColor : undefined }}
-                  >
-                    <input
-                      type="color"
-                      value={accountColor ?? ACCOUNT_PALETTE[0]}
-                      onChange={(e) => setAccountColor(e.target.value)}
-                      className="absolute opacity-0 w-0 h-0"
-                    />
-                    <span className="text-sm font-medium leading-none">+</span>
-                  </label>
-                </div>
-              </div>
-              {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={closeAccountForm}
-                  className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-200"
+        <SettingsSheet title={accountForm === 'new' ? 'Add account' : 'Edit account'} onClose={closeAccountForm}>
+          <div className="space-y-4" style={{ padding: 16 }}>
+            <div>
+              <label htmlFor="settings-account-name" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+                Name
+              </label>
+              <input
+                id="settings-account-name"
+                type="text"
+                value={accountName}
+                onChange={(e) => setAccountName(e.target.value)}
+                maxLength={ACCOUNT_NAME_MAX_LENGTH}
+                className="ui-input"
+                placeholder="e.g. Checking"
+              />
+            </div>
+            <div>
+              <label htmlFor="settings-account-initial" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+                Initial balance
+              </label>
+              <input
+                id="settings-account-initial"
+                type="number"
+                step="0.01"
+                min={-MAX_MONEY_AMOUNT}
+                max={MAX_MONEY_AMOUNT}
+                value={accountInitialBalance}
+                onChange={(e) => setAccountInitialBalance(e.target.value)}
+                className="ui-input"
+              />
+            </div>
+            <div>
+              <span className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                Color
+              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                {ACCOUNT_PALETTE.map((hex) => (
+                  <button
+                    key={hex}
+                    type="button"
+                    onClick={() => setAccountColor(hex)}
+                    className="w-7 h-7 rounded-full transition"
+                    style={{
+                      backgroundColor: hex,
+                      border: `2px solid ${accountColor === hex ? 'var(--text-primary)' : 'transparent'}`,
+                      transform: accountColor === hex ? 'scale(1.06)' : 'scale(1)',
+                    }}
+                    title={hex}
+                    aria-label={`Select color ${hex}`}
+                  />
+                ))}
+                <label
+                  className="relative inline-flex w-7 h-7 rounded-full items-center justify-center cursor-pointer"
+                  style={{
+                    border: `2px dashed var(--border-soft)`,
+                    backgroundColor: hasCustomAccountColor ? accountColor ?? undefined : 'transparent',
+                    color: 'var(--text-secondary)',
+                  }}
                 >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveAccount}
-                  disabled={saving}
-                  className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {saving ? 'Saving…' : 'Save'}
-                </button>
+                  <input
+                    type="color"
+                    value={accountColor ?? ACCOUNT_PALETTE[0]}
+                    onChange={(e) => setAccountColor(e.target.value)}
+                    className="absolute opacity-0 w-0 h-0"
+                    aria-label="Pick a custom color"
+                  />
+                  <span className="text-sm font-black leading-none">+</span>
+                </label>
               </div>
             </div>
+            {error && (
+              <p className="text-sm" style={{ color: 'var(--text-negative)' }}>
+                {error}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <button type="button" onClick={closeAccountForm} className="ui-btn ui-btn-secondary" style={{ flex: 1, textTransform: 'none', letterSpacing: 0 }}>
+                Cancel
+              </button>
+              <button type="button" onClick={handleSaveAccount} disabled={saving} className="ui-btn ui-btn-primary" style={{ flex: 1, textTransform: 'none', letterSpacing: 0 }}>
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
           </div>
-        </div>
+        </SettingsSheet>
       )}
 
       {addingCategoryType && (
-        <div className="fixed inset-0 z-20 flex items-end sm:items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-xl p-4">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
-              {addingCategoryType === 'expense' ? 'Add expense category' : 'Add income category'}
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
-                <input
-                  type="text"
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  maxLength={CATEGORY_NAME_MAX_LENGTH}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-md"
-                  placeholder="Category name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {addCategoryPalette.map((hex) => (
-                    <button
-                      key={hex}
-                      type="button"
-                      onClick={() => setNewCategoryColor(hex)}
-                      className={`w-6 h-6 rounded-full border-2 transition ${newCategoryColor === hex ? 'border-gray-800 dark:border-gray-200 scale-110' : 'border-transparent hover:border-gray-400'}`}
-                      style={{ backgroundColor: hex }}
-                      title={hex}
-                    />
-                  ))}
-                  <label
-                    className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0 cursor-pointer"
-                    style={{ backgroundColor: hasCustomNewCategoryColor ? newCategoryColor : undefined }}
-                  >
-                    <input
-                      type="color"
-                      value={newCategoryColor ?? addCategoryPalette[0]}
-                      onChange={(e) => setNewCategoryColor(e.target.value)}
-                      className="absolute opacity-0 w-0 h-0"
-                    />
-                    <span className="text-sm font-medium leading-none">+</span>
-                  </label>
-                </div>
-              </div>
-              {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={closeAddCategory}
-                  className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-200"
+        <SettingsSheet
+          title={addingCategoryType === 'expense' ? 'Add expense category' : 'Add income category'}
+          onClose={closeAddCategory}
+        >
+          <div className="space-y-4" style={{ padding: 16 }}>
+            <div>
+              <label htmlFor="settings-new-category-name" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+                Name
+              </label>
+              <input
+                id="settings-new-category-name"
+                type="text"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                maxLength={CATEGORY_NAME_MAX_LENGTH}
+                className="ui-input"
+                placeholder="Category name"
+              />
+            </div>
+            <div>
+              <span className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                Color
+              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                {addCategoryPalette.map((hex) => (
+                  <button
+                    key={hex}
+                    type="button"
+                    onClick={() => setNewCategoryColor(hex)}
+                    className="w-7 h-7 rounded-full transition"
+                    style={{
+                      backgroundColor: hex,
+                      border: `2px solid ${newCategoryColor === hex ? 'var(--text-primary)' : 'transparent'}`,
+                      transform: newCategoryColor === hex ? 'scale(1.06)' : 'scale(1)',
+                    }}
+                    title={hex}
+                    aria-label={`Select color ${hex}`}
+                  />
+                ))}
+                <label
+                  className="relative inline-flex w-7 h-7 rounded-full items-center justify-center cursor-pointer"
+                  style={{
+                    border: `2px dashed var(--border-soft)`,
+                    backgroundColor: hasCustomNewCategoryColor ? newCategoryColor ?? undefined : 'transparent',
+                    color: 'var(--text-secondary)',
+                  }}
                 >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveNewCategory}
-                  disabled={saving}
-                  className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {saving ? 'Saving…' : 'Save'}
-                </button>
+                  <input
+                    type="color"
+                    value={newCategoryColor ?? addCategoryPalette[0]}
+                    onChange={(e) => setNewCategoryColor(e.target.value)}
+                    className="absolute opacity-0 w-0 h-0"
+                    aria-label="Pick a custom color"
+                  />
+                  <span className="text-sm font-black leading-none">+</span>
+                </label>
               </div>
             </div>
+            {error && (
+              <p className="text-sm" style={{ color: 'var(--text-negative)' }}>
+                {error}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <button type="button" onClick={closeAddCategory} className="ui-btn ui-btn-secondary" style={{ flex: 1, textTransform: 'none', letterSpacing: 0 }}>
+                Cancel
+              </button>
+              <button type="button" onClick={handleSaveNewCategory} disabled={saving} className="ui-btn ui-btn-primary" style={{ flex: 1, textTransform: 'none', letterSpacing: 0 }}>
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
           </div>
-        </div>
+        </SettingsSheet>
       )}
 
       {categoryForm && (
-        <div className="fixed inset-0 z-20 flex items-end sm:items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-xl p-4">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Edit category</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
-                <input
-                  type="text"
-                  value={categoryEditName}
-                  onChange={(e) => setCategoryEditName(e.target.value)}
-                  maxLength={CATEGORY_NAME_MAX_LENGTH}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-md"
-                  placeholder="Category name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {editCategoryPalette.map((hex) => (
-                    <button
-                      key={hex}
-                      type="button"
-                      onClick={() => setCategoryEditColor(hex)}
-                      className={`w-6 h-6 rounded-full border-2 transition ${categoryEditColor === hex ? 'border-gray-800 dark:border-gray-200 scale-110' : 'border-transparent hover:border-gray-400'}`}
-                      style={{ backgroundColor: hex }}
-                      title={hex}
-                    />
-                  ))}
-                  <label
-                    className="w-6 h-6 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-gray-600 dark:hover:border-gray-300 transition shrink-0 cursor-pointer"
-                    style={{ backgroundColor: hasCustomEditCategoryColor ? categoryEditColor : undefined }}
-                  >
-                    <input
-                      type="color"
-                      value={categoryEditColor ?? editCategoryPalette[0]}
-                      onChange={(e) => setCategoryEditColor(e.target.value)}
-                      className="absolute opacity-0 w-0 h-0"
-                    />
-                    <span className="text-sm font-medium leading-none">+</span>
-                  </label>
-                </div>
-              </div>
-              {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={closeCategoryForm}
-                  className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-200"
+        <SettingsSheet title="Edit category" onClose={closeCategoryForm}>
+          <div className="space-y-4" style={{ padding: 16 }}>
+            <div>
+              <label htmlFor="settings-edit-category-name" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+                Name
+              </label>
+              <input
+                id="settings-edit-category-name"
+                type="text"
+                value={categoryEditName}
+                onChange={(e) => setCategoryEditName(e.target.value)}
+                maxLength={CATEGORY_NAME_MAX_LENGTH}
+                className="ui-input"
+                placeholder="Category name"
+              />
+            </div>
+            <div>
+              <span className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                Color
+              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                {editCategoryPalette.map((hex) => (
+                  <button
+                    key={hex}
+                    type="button"
+                    onClick={() => setCategoryEditColor(hex)}
+                    className="w-7 h-7 rounded-full transition"
+                    style={{
+                      backgroundColor: hex,
+                      border: `2px solid ${categoryEditColor === hex ? 'var(--text-primary)' : 'transparent'}`,
+                      transform: categoryEditColor === hex ? 'scale(1.06)' : 'scale(1)',
+                    }}
+                    title={hex}
+                    aria-label={`Select color ${hex}`}
+                  />
+                ))}
+                <label
+                  className="relative inline-flex w-7 h-7 rounded-full items-center justify-center cursor-pointer"
+                  style={{
+                    border: `2px dashed var(--border-soft)`,
+                    backgroundColor: hasCustomEditCategoryColor ? categoryEditColor ?? undefined : 'transparent',
+                    color: 'var(--text-secondary)',
+                  }}
                 >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveCategory}
-                  disabled={categorySaving}
-                  className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {categorySaving ? 'Saving…' : 'Save'}
-                </button>
+                  <input
+                    type="color"
+                    value={categoryEditColor ?? editCategoryPalette[0]}
+                    onChange={(e) => setCategoryEditColor(e.target.value)}
+                    className="absolute opacity-0 w-0 h-0"
+                    aria-label="Pick a custom color"
+                  />
+                  <span className="text-sm font-black leading-none">+</span>
+                </label>
               </div>
             </div>
+            {error && (
+              <p className="text-sm" style={{ color: 'var(--text-negative)' }}>
+                {error}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <button type="button" onClick={closeCategoryForm} className="ui-btn ui-btn-secondary" style={{ flex: 1, textTransform: 'none', letterSpacing: 0 }}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveCategory}
+                disabled={categorySaving}
+                className="ui-btn ui-btn-primary"
+                style={{ flex: 1, textTransform: 'none', letterSpacing: 0 }}
+              >
+                {categorySaving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
           </div>
-        </div>
+        </SettingsSheet>
       )}
     </div>
   )

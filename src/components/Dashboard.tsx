@@ -13,6 +13,7 @@ import CategoryFilterDropdown from './CategoryFilterDropdown'
 import { formatCurrency } from '../utils/format'
 import { getAccountColor } from '../constants/colors'
 import { logInternalError, toUserErrorMessage } from '../utils/errors'
+import { IconChevronLeft, IconChevronRight } from './ui/icons'
 
 export type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc' | 'category'
 
@@ -347,9 +348,16 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
           style={{ minHeight: 40, width: 44, padding: 0, borderRadius: 16 }}
           aria-label="Previous month"
         >
-          ←
+          <IconChevronLeft size={18} />
         </button>
-        <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.02em', color: 'var(--text-secondary)' }}>
+        <span
+          style={{
+            fontSize: 17,
+            fontWeight: 900,
+            letterSpacing: '-0.01em',
+            color: 'var(--text-secondary)',
+          }}
+        >
           {formatMonthLabel(selectedMonth)}
         </span>
         <button
@@ -359,19 +367,39 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
           style={{ minHeight: 40, width: 44, padding: 0, borderRadius: 16 }}
           aria-label="Next month"
         >
-          →
+          <IconChevronRight size={18} />
         </button>
       </div>
 
       <div className="grid grid-cols-3 gap-2 text-center">
-        <div className="ui-card-inner" style={{ background: 'rgba(61,171,106,0.18)', padding: 12, borderRadius: 16, border: '1px solid rgba(61,171,106,0.28)' }}>
-          <p className="text-xs" style={{ color: 'var(--text-primary)', fontWeight: 800 }}>Income</p>
+        <div
+          className="ui-card-inner"
+          style={{
+            background: 'rgba(61,171,106,0.30)',
+            padding: 12,
+            borderRadius: 16,
+            border: '1px solid rgba(61,171,106,0.52)',
+          }}
+        >
+          <p className="text-xs" style={{ color: 'var(--text-positive)', fontWeight: 900 }}>
+            Income
+          </p>
           <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
             ${formatCurrency(summary.income)}
           </p>
         </div>
-        <div className="ui-card-inner" style={{ background: 'rgba(232,52,74,0.14)', padding: 12, borderRadius: 16, border: '1px solid rgba(232,52,74,0.26)' }}>
-          <p className="text-xs" style={{ color: 'var(--text-primary)', fontWeight: 800 }}>Expenses</p>
+        <div
+          className="ui-card-inner"
+          style={{
+            background: 'rgba(232,52,74,0.24)',
+            padding: 12,
+            borderRadius: 16,
+            border: '1px solid rgba(232,52,74,0.48)',
+          }}
+        >
+          <p className="text-xs" style={{ color: 'var(--text-negative)', fontWeight: 900 }}>
+            Expenses
+          </p>
           <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
             ${formatCurrency(summary.expenses)}
           </p>

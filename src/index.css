@@ -16,8 +16,13 @@
     --color-bg-nav: #111111;
 
     /* Subtle premium background (less harsh than flat mint). */
-    --bg-screen: radial-gradient(1200px 700px at 30% -10%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 55%),
-      linear-gradient(180deg, rgba(184, 240, 216, 0.86) 0%, rgba(184, 240, 216, 0.58) 100%);
+    /* Large, low-contrast layers + micro-noise to avoid obvious “seams” while scrolling. */
+    --bg-screen:
+      radial-gradient(140vw 120vh at 12% -18%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 62%),
+      radial-gradient(120vw 110vh at 92% 8%, rgba(96, 214, 200, 0.22) 0%, rgba(96, 214, 200, 0) 58%),
+      radial-gradient(160vw 140vh at 48% 118%, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 55%),
+      linear-gradient(180deg, rgba(184, 240, 216, 0.92) 0%, rgba(184, 240, 216, 0.72) 55%, rgba(184, 240, 216, 0.86) 100%),
+      repeating-linear-gradient(135deg, rgba(17, 17, 17, 0.018) 0 1px, rgba(255, 255, 255, 0.018) 1px 2px);
 
     /* ── brand actions ── */
     --color-green: #3dab6a;
@@ -106,22 +111,38 @@
     --popover-text: rgba(255, 255, 255, 0.92);
     --popover-muted: rgba(255, 255, 255, 0.72);
 
-    --bg-screen: radial-gradient(900px 520px at 30% -10%, rgba(96, 214, 200, 0.12) 0%, rgba(96, 214, 200, 0) 55%),
-      linear-gradient(180deg, rgba(6, 21, 18, 1) 0%, rgba(5, 13, 11, 1) 100%);
+    --bg-screen:
+      radial-gradient(140vw 120vh at 12% -18%, rgba(96, 214, 200, 0.16) 0%, rgba(96, 214, 200, 0) 62%),
+      radial-gradient(120vw 110vh at 92% 10%, rgba(123, 97, 255, 0.10) 0%, rgba(123, 97, 255, 0) 58%),
+      radial-gradient(160vw 140vh at 48% 118%, rgba(96, 214, 200, 0.10) 0%, rgba(96, 214, 200, 0) 55%),
+      linear-gradient(180deg, rgba(6, 21, 18, 1) 0%, rgba(5, 13, 11, 1) 100%),
+      repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.012) 0 1px, rgba(0, 0, 0, 0.012) 1px 2px);
   }
 
-  html,
+  html {
+    min-height: 100%;
+  }
+
   body {
-    height: 100%;
+    min-height: 100%;
   }
 
   body {
     font-family: var(--font-family);
-    background: var(--bg-screen);
+    background-color: var(--color-bg-screen);
+    background-image: var(--bg-screen);
+    background-repeat: no-repeat;
+    background-size: cover;
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    body {
+      background-attachment: fixed;
+    }
   }
 
   ::selection {
@@ -240,13 +261,73 @@
     height: 16px;
   }
 
+  .ui-switch {
+    width: 46px;
+    height: 28px;
+    border-radius: 9999px;
+    padding: 0;
+    border: 1px solid var(--border-soft);
+    background: var(--color-bg-secondary);
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  .ui-switch::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    background: var(--color-bg-card);
+    border: 1px solid var(--border-softer);
+    transform: translate(0, -50%);
+    transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
+    box-shadow: 0 6px 16px rgba(17, 17, 17, 0.12);
+  }
+
+  .ui-switch[aria-checked='true'] {
+    background: rgba(61, 171, 106, 0.22);
+    border-color: rgba(61, 171, 106, 0.35);
+  }
+
+  .ui-switch[aria-checked='true']::after {
+    transform: translate(18px, -50%);
+  }
+
+  .ui-switch:active::after {
+    transform: translate(2px, -50%) scale(0.98);
+  }
+
+  .ui-switch[aria-checked='true']:active::after {
+    transform: translate(16px, -50%) scale(0.98);
+  }
+
+  .dark .ui-switch {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--border-soft);
+  }
+
+  .dark .ui-switch::after {
+    background: rgba(12, 29, 25, 0.92);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
+  }
+
+  .dark .ui-switch[aria-checked='true'] {
+    background: rgba(61, 171, 106, 0.18);
+    border-color: rgba(61, 171, 106, 0.28);
+  }
+
   .ui-input::placeholder {
     color: var(--text-muted);
   }
 
   .ui-input:focus,
   .ui-select:focus,
-  .ui-btn:focus-visible {
+  .ui-btn:focus-visible,
+  .ui-switch:focus-visible {
     outline: none;
     box-shadow: 0 0 0 3px var(--focus-ring);
   }

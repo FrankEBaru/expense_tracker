@@ -81,3 +81,74 @@ export function IconMoon(props: IconProps) {
   )
 }
 
+export function IconChevronLeft(props: IconProps) {
+  const p = baseProps(props)
+  return (
+    <svg {...p}>
+      <path d="M9.8 3.2 5.2 8l4.6 4.8" stroke="currentColor" strokeWidth={p.strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+export function IconChevronRight(props: IconProps) {
+  const p = baseProps(props)
+  return (
+    <svg {...p}>
+      <path d="M6.2 3.2 10.8 8 6.2 12.8" stroke="currentColor" strokeWidth={p.strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+export function IconBank(props: IconProps) {
+  const p = baseProps(props)
+  return (
+    <svg {...p}>
+      <path
+        d="M2.8 6.4h10.4M4 6.4V12.6h8V6.4M6.2 12.6V9.6M9.8 12.6V9.6M5.4 5.2h5.2a1.1 1.1 0 0 0 0-2.2H5.4a1.1 1.1 0 0 0 0 2.2Z"
+        stroke="currentColor"
+        strokeWidth={p.strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+export function IconWallet(props: IconProps) {
+  const p = baseProps(props)
+  return (
+    <svg {...p}>
+      <path
+        d="M3.2 6.2c0-1.1.9-2 2-2h5.6c1.1 0 2 .9 2 2v6.6c0 1.1-.9 2-2 2H5.2c-1.1 0-2-.9-2-2V6.2Z"
+        stroke="currentColor"
+        strokeWidth={p.strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M3.2 7.6h9.6v2.4H9.6a1.2 1.2 0 0 1-1.2-1.2V7.6"
+        stroke="currentColor"
+        strokeWidth={p.strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+export function IconTag(props: IconProps) {
+  const p = baseProps(props)
+  return (
+    <svg {...p}>
+      <path
+        d="M5.8 3.4h3.6l4.6 4.6-3.6 3.6a1.1 1.1 0 0 1-1.55 0L4.25 9.05A1.1 1.1 0 0 1 3.9 8.1V5.5c0-.94.76-1.7 1.7-1.7h.2Z"
+        stroke="currentColor"
+        strokeWidth={p.strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M7.05 6.05h.01" stroke="currentColor" strokeWidth={p.strokeWidth * 1.35} strokeLinecap="round" />
+    </svg>
+  )
+}
+

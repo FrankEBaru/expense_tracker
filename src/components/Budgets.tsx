@@ -20,7 +20,7 @@ const PERIOD_LABELS: Record<BudgetPeriodType, string> = {
   monthly: 'Monthly',
 }
 
-export default function Budgets({ onBack, onError }: BudgetsProps) {
+export default function Budgets({ onBack: _onBack, onError }: BudgetsProps) {
   const { budgets, loading: budgetsLoading, error: budgetsError, addBudget, updateBudget, deleteBudget, setBudgetCategories } = useBudgets()
   const { categories: expenseCategories } = useCategories('expense')
   const { getTransactionsForPeriod, loading: txLoading } = useBudgetPeriodTransactions()
@@ -163,9 +163,6 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
   if (budgetsError) {
     return (
       <div className="space-y-4">
-        <button type="button" onClick={onBack} className="ui-btn ui-btn-ghost" style={{ minHeight: 36, padding: '8px 10px', textTransform: 'none', letterSpacing: 0 }}>
-          ← Back
-        </button>
         <div className="ui-card p-4">
           <p className="text-sm" style={{ color: 'var(--text-negative)' }}>{budgetsError}</p>
         </div>
@@ -175,10 +172,14 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
 
   return (
     <div className="space-y-4">
-      {(() => {
-        void onBack
-        return null
-      })()}
+      {!loading && budgets.length > 0 && (
+        <div className="flex items-center justify-between gap-3">
+          <h2 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)' }}>Budgets</h2>
+          <button type="button" onClick={openAddForm} className="ui-btn ui-btn-primary" style={{ minHeight: 40, textTransform: 'none', letterSpacing: 0 }}>
+            Add budget
+          </button>
+        </div>
+      )}
 
       <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
         Showing status for the current period. Weekly resets Monday–Sunday; biweekly uses 1–14 and 15–end of month.
@@ -207,8 +208,15 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
             if (!status) return null
             const effective = status.effective
             const spent = status.spent
-            const pct = effective > 0 ? Math.min(1, spent / effective) : 0
-            const overPct = effective > 0 && status.isOver ? Math.min(1, -status.remaining / effective) : 0
+            const denom = effective > 0 ? effective : 0
+            const spentShare = denom > 0 ? Math.min(1, spent / denom) : spent > 0 ? 1 : 0
+            const overShare = denom > 0 && status.isOver ? Math.min(1, Math.max(0, -status.remaining / denom)) : 0
+            const remainingShare = denom > 0 && !status.isOver ? Math.min(1, Math.max(0, status.remaining / denom)) : 0
+            const sum = spentShare + overShare + remainingShare
+            const scale = sum > 1 ? 1 / sum : 1
+            const spentW = spentShare * scale
+            const overW = overShare * scale
+            const remW = remainingShare * scale
             return (
               <li
                 key={budget.id}
@@ -300,26 +308,24 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
                 >
                   <div
                     className="h-full transition-all"
-                    style={{ width: `${pct * 100}%` }}
+                    style={{ width: `${spentW * 100}%`, background: 'rgba(61,171,106,0.95)' }}
                     aria-hidden
                     title="Spent"
                   />
-                  <div
-                    className="h-full transition-all"
-                    style={{ width: `${pct * 100}%`, background: 'var(--color-violet)' }}
-                  />
                   {status.isOver && (
                     <div
                       className="h-full transition-all"
-                      style={{ width: `${overPct * 100}%` }}
+                      style={{ width: `${overW * 100}%`, background: 'var(--text-negative)' }}
                       aria-hidden
-                      title="Over"
+                      title="Over budget"
                     />
                   )}
-                  {status.isOver && (
+                  {!status.isOver && (
                     <div
                       className="h-full transition-all"
-                      style={{ width: `${overPct * 100}%`, background: 'var(--text-negative)' }}
+                      style={{ width: `${remW * 100}%`, background: 'rgba(17,17,17,0.06)' }}
+                      aria-hidden
+                      title="Remaining"
                     />
                   )}
                 </div>
