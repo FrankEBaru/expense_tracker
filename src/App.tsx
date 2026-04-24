@@ -14,6 +14,7 @@ import type { Transaction } from './types/transaction'
 import type { TransactionInsert } from './types/transaction'
 import type { TransactionUpdate } from './types/transaction'
 import PillNav, { type NavItemId } from './components/ui/PillNav'
+import { IconLogout, IconPlus } from './components/ui/icons'
 
 type View = 'dashboard' | 'settings' | 'insights' | 'budgets' | 'resetPassword'
 
@@ -186,7 +187,7 @@ function App() {
 
   if (!isSupabaseConfigured) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: 'var(--color-bg-screen)' }}>
+      <div className="min-h-screen flex items-center justify-center p-6">
         <div className="ui-card max-w-md w-full p-5 text-center">
           <p className="font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Supabase not configured</p>
           <p className="text-sm">
@@ -202,7 +203,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg-screen)' }}>
+      <div className="min-h-screen flex items-center justify-center">
         <p style={{ color: 'var(--text-secondary)' }}>Loading…</p>
       </div>
     )
@@ -215,7 +216,7 @@ function App() {
   const activeNav = (view === 'resetPassword' ? 'dashboard' : view) as NavItemId
 
   return (
-    <div className="min-h-screen pb-28" style={{ background: 'var(--color-bg-screen)' }}>
+    <div className="min-h-screen pb-28">
       <header className="ui-container" style={{ paddingTop: 18, paddingBottom: 12 }}>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
@@ -229,22 +230,13 @@ function App() {
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
-              onClick={toggleTheme}
-              className="ui-btn ui-btn-ghost"
-              aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-              title={dark ? 'Light mode' : 'Dark mode'}
-              style={{ minHeight: 40, padding: '10px 12px', textTransform: 'none', letterSpacing: '0' }}
-            >
-              <span aria-hidden style={{ fontSize: 14 }}>{dark ? '☀️' : '🌙'}</span>
-              <span className="sr-only">{dark ? 'Light mode' : 'Dark mode'}</span>
-            </button>
-            <button
-              type="button"
               onClick={handleLogout}
               className="ui-btn ui-btn-secondary"
-              style={{ minHeight: 40, padding: '10px 12px' }}
+              aria-label="Log out"
+              title="Log out"
+              style={{ minHeight: 40, width: 44, padding: 0 }}
             >
-              Log out
+              <IconLogout size={16} />
             </button>
           </div>
         </div>
@@ -264,7 +256,9 @@ function App() {
             onOpenBudgets={openBudgets}
           />
         )}
-        {view === 'settings' && <Settings onBack={closeSettings} onError={showToast} />}
+        {view === 'settings' && (
+          <Settings onBack={closeSettings} onError={showToast} dark={dark} onToggleTheme={toggleTheme} />
+        )}
         {view === 'insights' && <Insights onBack={closeInsights} />}
         {view === 'budgets' && <Budgets onBack={closeBudgets} onError={showToast} />}
         {view === 'resetPassword' && (
@@ -278,8 +272,15 @@ function App() {
       {view === 'dashboard' && (
         <div className="fixed left-0 right-0 bottom-[86px] z-10" style={{ paddingLeft: 'var(--space-screen-h)', paddingRight: 'var(--space-screen-h)' }}>
           <div className="mx-auto w-full max-w-2xl flex justify-end">
-            <button type="button" onClick={openAddForm} className="ui-btn ui-btn-primary" aria-label="Add transaction">
-              Add
+            <button
+              type="button"
+              onClick={openAddForm}
+              className="ui-btn ui-btn-primary"
+              aria-label="Add transaction"
+              title="Add transaction"
+              style={{ width: 44, padding: 0 }}
+            >
+              <IconPlus size={18} />
             </button>
           </div>
         </div>

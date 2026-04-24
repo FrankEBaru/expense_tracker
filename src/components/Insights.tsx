@@ -284,18 +284,10 @@ export default function Insights({ onBack }: InsightsProps) {
 
   return (
     <div className="space-y-6 pb-6">
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onBack}
-          className="ui-btn ui-btn-ghost"
-          style={{ minHeight: 36, padding: '8px 10px', textTransform: 'none', letterSpacing: 0 }}
-        >
-          ← Dashboard
-        </button>
-        <h2 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.01em', color: 'var(--text-primary)' }}>Insights</h2>
-        <span className="w-16" />
-      </div>
+      {(() => {
+        void onBack
+        return null
+      })()}
 
       {/* 1. Trend summary */}
       <section className="ui-card" style={{ padding: 'var(--space-card)' }}>

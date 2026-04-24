@@ -39,27 +39,30 @@ function BarChart({
 }) {
   const max = Math.max(1, ...items.map((i) => i.total))
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-600 dark:bg-gray-800 min-w-0">
-      <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 truncate">{title}</h3>
+    <div className="ui-card min-w-0" style={{ padding: 'var(--space-card)' }}>
+      <h3 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 10 }} className="truncate">
+        {title}
+      </h3>
       {items.length === 0 ? (
-        <p className="text-xs text-gray-400 dark:text-gray-500">{emptyMessage}</p>
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{emptyMessage}</p>
       ) : (
         <div className="space-y-1.5">
           {items.map((item, idx) => {
             const barColor = getCategoryColor(item.id, categories, idx, EXPENSE_CATEGORY_PALETTE)
             return (
               <div key={item.id} className="flex items-center gap-1.5 min-w-0">
-                <span className="w-16 sm:w-20 shrink-0 text-xs text-gray-700 dark:text-gray-300 truncate" title={item.name}>
+                <span className="w-16 sm:w-20 shrink-0 text-xs truncate" style={{ color: 'var(--text-primary)' }} title={item.name}>
                   {item.name}
                 </span>
-                <div className="min-w-0 flex-1 h-4 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden">
+                <div className="min-w-0 flex-1 h-4 rounded overflow-hidden" style={{ background: 'rgba(17,17,17,0.08)' }}>
                   <div
                     className="h-full rounded"
                     style={{ width: `${(item.total / max) * 100}%`, backgroundColor: barColor }}
                   />
                 </div>
                 <span
-                  className="min-w-0 w-20 sm:w-24 truncate text-right text-xs font-medium text-gray-800 dark:text-gray-200 tabular-nums"
+                  className="min-w-0 w-20 sm:w-24 truncate text-right text-xs font-medium tabular-nums"
+                  style={{ color: 'var(--text-primary)' }}
                   title={`$${formatCurrency(item.total)}`}
                 >
                   ${formatCurrency(item.total)}

@@ -45,63 +45,67 @@ export default function CategoryFilterDropdown({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+        className="ui-btn ui-btn-secondary"
+        style={{ minHeight: 40, padding: '8px 10px', textTransform: 'none', letterSpacing: 0 }}
         aria-expanded={open}
         aria-haspopup="listbox"
       >
         {label}
-        <span className="text-gray-400" aria-hidden>▼</span>
       </button>
       {open && (
         <div
-          className="absolute top-full left-0 mt-1 z-20 w-56 max-h-64 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800"
+          className="absolute top-full left-0 mt-1 z-20 w-64 max-h-72 overflow-y-auto ui-card"
+          style={{ padding: 8 }}
           role="listbox"
         >
-          <div className="p-2 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Filter by category</span>
+          <div className="pb-2 mb-2 flex justify-between items-center" style={{ borderBottom: '1px solid var(--border-softer)' }}>
+            <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Filter by category</span>
             {selectedIds.length > 0 && (
               <button
                 type="button"
                 onClick={() => onChange([])}
-                className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                className="ui-btn ui-btn-ghost"
+                style={{ minHeight: 30, padding: '6px 8px', textTransform: 'none', letterSpacing: 0 }}
               >
                 Clear
               </button>
             )}
           </div>
-          <div className="p-2">
+          <div>
             {expenseCategories.length > 0 && (
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1 mb-1">Expense</p>
+              <p className="text-xs font-medium mt-1 mb-1" style={{ color: 'var(--text-secondary)' }}>Expense</p>
             )}
             {expenseCategories.map((c) => (
               <label
                 key={c.id}
-                className="flex items-center gap-2 py-1.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded px-2"
+                className="flex items-center gap-2 py-2 cursor-pointer ui-card-inner"
+                style={{ borderRadius: 14 }}
               >
                 <input
                   type="checkbox"
                   checked={selectedIds.includes(c.id)}
                   onChange={() => toggle(c.id)}
-                  className="rounded border-gray-300 dark:border-gray-500"
+                  className="rounded"
                 />
-                <span className="text-sm text-gray-800 dark:text-gray-200">{c.name}</span>
+                <span className="text-sm" style={{ color: 'var(--text-primary)' }}>{c.name}</span>
               </label>
             ))}
             {incomeCategories.length > 0 && (
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-2 mb-1">Income</p>
+              <p className="text-xs font-medium mt-3 mb-1" style={{ color: 'var(--text-secondary)' }}>Income</p>
             )}
             {incomeCategories.map((c) => (
               <label
                 key={c.id}
-                className="flex items-center gap-2 py-1.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded px-2"
+                className="flex items-center gap-2 py-2 cursor-pointer ui-card-inner"
+                style={{ borderRadius: 14 }}
               >
                 <input
                   type="checkbox"
                   checked={selectedIds.includes(c.id)}
                   onChange={() => toggle(c.id)}
-                  className="rounded border-gray-300 dark:border-gray-500"
+                  className="rounded"
                 />
-                <span className="text-sm text-gray-800 dark:text-gray-200">{c.name}</span>
+                <span className="text-sm" style={{ color: 'var(--text-primary)' }}>{c.name}</span>
               </label>
             ))}
           </div>

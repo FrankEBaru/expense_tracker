@@ -106,9 +106,14 @@ export default function TransactionList({
         const toName = getAccountName(accounts, tx.to_account_id)
         const accountName = getAccountName(accounts, tx.account_id)
 
-        let label: string
-        if (isTransfer) label = `${fromName} → ${toName}`
-        else label = categoryName || accountName || tx.type
+        const primaryLabel = tx.description?.trim()
+          ? tx.description.trim()
+          : isTransfer
+            ? 'Transfer'
+            : categoryName || 'Transaction'
+
+        const badgeLabel = isTransfer ? '' : categoryName
+        const secondaryLabel = isTransfer ? `${fromName} → ${toName}` : accountName
 
         const accentColor = (() => {
           if (tx.type === 'expense' && tx.category_id) {
@@ -129,7 +134,7 @@ export default function TransactionList({
         })()
 
         const amountColor = isExpense ? 'var(--text-negative)' : isTransfer ? 'var(--text-primary)' : 'var(--text-positive)'
-        const typeLabel = isTransfer ? 'transfer' : isExpense ? 'expense' : 'income'
+        void isExpense
 
         return (
           <li
@@ -188,23 +193,25 @@ export default function TransactionList({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="truncate" style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
-                  {label}
+                  {primaryLabel}
                 </span>
-                <span className="ui-badge shrink-0" style={{ background: 'var(--color-bg-secondary)', color: 'var(--text-secondary)' }}>
-                  {typeLabel}
-                </span>
+                {!isTransfer && badgeLabel && (
+                  <span className="ui-badge shrink-0" style={{ background: 'var(--color-bg-secondary)', color: 'var(--text-secondary)' }}>
+                    {badgeLabel}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                   {formatDate(tx.date)}
                 </span>
-                {tx.description && (
+                {secondaryLabel && (
                   <>
                     <span aria-hidden className="text-xs" style={{ color: 'var(--text-muted)' }}>
                       •
                     </span>
                     <span className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>
-                      {tx.description}
+                      {secondaryLabel}
                     </span>
                   </>
                 )}

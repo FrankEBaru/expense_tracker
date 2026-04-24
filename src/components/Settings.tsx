@@ -9,13 +9,16 @@ import type { Account } from '../types/account'
 import type { Category } from '../types/category'
 import { logInternalError, toUserErrorMessage } from '../utils/errors'
 import { isHexColor, isUuid } from '../utils/validation'
+import { IconMoon, IconSun } from './ui/icons'
 
 interface SettingsProps {
   onBack: () => void
   onError?: (message: string) => void
+  dark: boolean
+  onToggleTheme: () => void
 }
 
-export default function Settings({ onBack, onError }: SettingsProps) {
+export default function Settings({ onBack, onError, dark, onToggleTheme }: SettingsProps) {
   const { accounts, loading: accountsLoading, addAccount, updateAccount, deleteAccount } = useAccounts()
   const {
     categories: expenseCategories,
@@ -301,31 +304,51 @@ export default function Settings({ onBack, onError }: SettingsProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-        >
-          ← Back
-        </button>
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Settings</h2>
-        <span className="w-12" />
-      </div>
+      {(() => {
+        void onBack
+        return null
+      })()}
+
+      <section className="ui-card" style={{ padding: 'var(--space-card)' }}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h3 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+              Appearance
+            </h3>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-primary)' }}>
+              Theme
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            className="ui-btn ui-btn-secondary"
+            style={{ minHeight: 40, padding: '10px 12px', textTransform: 'none', letterSpacing: 0 }}
+            aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={dark ? 'Light mode' : 'Dark mode'}
+          >
+            {dark ? <IconMoon size={16} /> : <IconSun size={16} />}
+            {dark ? 'Dark' : 'Light'}
+          </button>
+        </div>
+      </section>
 
       <section>
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Accounts</h3>
+        <h3 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 10 }}>
+          Accounts
+        </h3>
         {accountsLoading ? (
-          <p className="text-gray-500 text-sm dark:text-gray-400">Loading…</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Loading…</p>
         ) : accounts.length === 0 ? (
           <>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">No accounts yet. Add one below.</p>
+            <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>No accounts yet. Add one below.</p>
             <button
               type="button"
               onClick={openNewAccount}
-              className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+              className="ui-btn ui-btn-primary"
+              style={{ minHeight: 40 }}
             >
-              + Add account
+              Add account
             </button>
           </>
         ) : (
@@ -334,7 +357,8 @@ export default function Settings({ onBack, onError }: SettingsProps) {
               {accounts.map((acc, idx) => (
                 <li
                   key={acc.id}
-                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center justify-between gap-3"
+                  className="ui-card"
+                  style={{ padding: 12 }}
                 >
                   <div className="flex flex-1 min-w-0 items-center gap-2 flex-wrap">
                     <span
@@ -342,18 +366,18 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                       style={{ backgroundColor: getAccountColor(acc, idx) }}
                       title="Account color"
                     />
-                    <span className="font-medium text-gray-800 dark:text-gray-200 truncate">{acc.name}</span>
-                    <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
+                    <span className="font-medium truncate" style={{ color: 'var(--text-primary)' }}>{acc.name}</span>
+                    <span className="text-sm ml-2" style={{ color: 'var(--text-secondary)' }}>
                       Initial: ${formatCurrency(Number(acc.initial_balance))}
                     </span>
                   </div>
                   <div className="flex shrink-0 items-center gap-3">
-                    <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: 'var(--text-secondary)' }}>
                       <input
                         type="checkbox"
                         checked={!!acc.hide_balance}
                         onChange={() => void handleToggleHideBalance(acc)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded"
                       />
                       Hide balance
                     </label>
@@ -361,21 +385,23 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                       <button
                         type="button"
                         onClick={() => setOpenAccountMenuId(openAccountMenuId === acc.id ? null : acc.id)}
-                        className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm"
+                        className="ui-btn ui-btn-ghost"
+                        style={{ minHeight: 36, width: 40, padding: 0, textTransform: 'none', letterSpacing: 0 }}
                         aria-label="Actions"
                         aria-expanded={openAccountMenuId === acc.id}
                       >
                         ⋮
                       </button>
                       {openAccountMenuId === acc.id && (
-                        <div className="absolute right-0 top-full mt-1 z-20 min-w-[7rem] rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800 py-1">
+                        <div className="absolute right-0 top-full mt-1 z-20 min-w-[8rem] ui-card" style={{ padding: 6 }}>
                           <button
                             type="button"
                             onClick={() => {
                               openEditAccount(acc)
                               setOpenAccountMenuId(null)
                             }}
-                            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                            className="w-full text-left ui-btn ui-btn-ghost"
+                            style={{ width: '100%', justifyContent: 'flex-start', minHeight: 40, padding: '10px 10px', textTransform: 'none', letterSpacing: 0 }}
                           >
                             Edit
                           </button>
@@ -385,7 +411,8 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                               handleDeleteAccount(acc.id)
                               setOpenAccountMenuId(null)
                             }}
-                            className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-700"
+                            className="w-full text-left ui-btn ui-btn-ghost"
+                            style={{ width: '100%', justifyContent: 'flex-start', minHeight: 40, padding: '10px 10px', textTransform: 'none', letterSpacing: 0, color: 'var(--text-negative)' }}
                           >
                             Delete
                           </button>
@@ -399,24 +426,28 @@ export default function Settings({ onBack, onError }: SettingsProps) {
             <button
               type="button"
               onClick={openNewAccount}
-              className="text-sm text-blue-600 hover:text-blue-800"
+              className="ui-btn ui-btn-primary"
+              style={{ minHeight: 40 }}
             >
-              + Add account
+              Add account
             </button>
           </>
         )}
       </section>
 
       <section>
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Expense categories</h3>
+        <h3 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 10 }}>
+          Expense categories
+        </h3>
         {expenseCategories.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">No expense categories yet. Add one below.</p>
+          <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>No expense categories yet. Add one below.</p>
         ) : null}
         <ul className="space-y-2 mb-3">
           {expenseCategories.map((c) => (
             <li
               key={c.id}
-              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center justify-between gap-2"
+              className="ui-card"
+              style={{ padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
             >
               <div className="flex items-center gap-2 min-w-0">
                 <span
@@ -424,27 +455,29 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                   style={{ backgroundColor: c.color ?? EXPENSE_CATEGORY_PALETTE[0] }}
                   title="Category color"
                 />
-                <span className="text-gray-800 dark:text-gray-200 truncate">{c.name}</span>
+                <span className="truncate" style={{ color: 'var(--text-primary)' }}>{c.name}</span>
               </div>
               <div className="relative shrink-0" ref={openCategoryMenuId === c.id ? categoryMenuRef : undefined}>
                 <button
                   type="button"
                   onClick={() => setOpenCategoryMenuId(openCategoryMenuId === c.id ? null : c.id)}
-                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm"
+                  className="ui-btn ui-btn-ghost"
+                  style={{ minHeight: 36, width: 40, padding: 0, textTransform: 'none', letterSpacing: 0 }}
                   aria-label="Actions"
                   aria-expanded={openCategoryMenuId === c.id}
                 >
                   ⋮
                 </button>
                 {openCategoryMenuId === c.id && (
-                  <div className="absolute right-0 top-full mt-1 z-20 min-w-[7rem] rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800 py-1">
+                  <div className="absolute right-0 top-full mt-1 z-20 min-w-[8rem] ui-card" style={{ padding: 6 }}>
                     <button
                       type="button"
                       onClick={() => {
                         openEditCategory(c)
                         setOpenCategoryMenuId(null)
                       }}
-                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                      className="w-full text-left ui-btn ui-btn-ghost"
+                      style={{ width: '100%', justifyContent: 'flex-start', minHeight: 40, padding: '10px 10px', textTransform: 'none', letterSpacing: 0 }}
                     >
                       Edit
                     </button>
@@ -454,7 +487,8 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                         handleDeleteExpenseCategory(c.id)
                         setOpenCategoryMenuId(null)
                       }}
-                      className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-700"
+                      className="w-full text-left ui-btn ui-btn-ghost"
+                      style={{ width: '100%', justifyContent: 'flex-start', minHeight: 40, padding: '10px 10px', textTransform: 'none', letterSpacing: 0, color: 'var(--text-negative)' }}
                     >
                       Delete
                     </button>
@@ -467,22 +501,26 @@ export default function Settings({ onBack, onError }: SettingsProps) {
         <button
           type="button"
           onClick={() => openAddCategory('expense')}
-          className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+          className="ui-btn ui-btn-primary"
+          style={{ minHeight: 40 }}
         >
-          + Add expense category
+          Add expense category
         </button>
       </section>
 
       <section>
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Income categories</h3>
+        <h3 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 10 }}>
+          Income categories
+        </h3>
         {incomeCategories.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">No income categories yet. Add one below.</p>
+          <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>No income categories yet. Add one below.</p>
         ) : null}
         <ul className="space-y-2 mb-3">
           {incomeCategories.map((c) => (
             <li
               key={c.id}
-              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center justify-between gap-2"
+              className="ui-card"
+              style={{ padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
             >
               <div className="flex items-center gap-2 min-w-0">
                 <span
@@ -490,27 +528,29 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                   style={{ backgroundColor: c.color ?? INCOME_CATEGORY_PALETTE[0] }}
                   title="Category color"
                 />
-                <span className="text-gray-800 dark:text-gray-200 truncate">{c.name}</span>
+                <span className="truncate" style={{ color: 'var(--text-primary)' }}>{c.name}</span>
               </div>
               <div className="relative shrink-0" ref={openCategoryMenuId === c.id ? categoryMenuRef : undefined}>
                 <button
                   type="button"
                   onClick={() => setOpenCategoryMenuId(openCategoryMenuId === c.id ? null : c.id)}
-                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm"
+                  className="ui-btn ui-btn-ghost"
+                  style={{ minHeight: 36, width: 40, padding: 0, textTransform: 'none', letterSpacing: 0 }}
                   aria-label="Actions"
                   aria-expanded={openCategoryMenuId === c.id}
                 >
                   ⋮
                 </button>
                 {openCategoryMenuId === c.id && (
-                  <div className="absolute right-0 top-full mt-1 z-20 min-w-[7rem] rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800 py-1">
+                  <div className="absolute right-0 top-full mt-1 z-20 min-w-[8rem] ui-card" style={{ padding: 6 }}>
                     <button
                       type="button"
                       onClick={() => {
                         openEditCategory(c)
                         setOpenCategoryMenuId(null)
                       }}
-                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                      className="w-full text-left ui-btn ui-btn-ghost"
+                      style={{ width: '100%', justifyContent: 'flex-start', minHeight: 40, padding: '10px 10px', textTransform: 'none', letterSpacing: 0 }}
                     >
                       Edit
                     </button>
@@ -520,7 +560,8 @@ export default function Settings({ onBack, onError }: SettingsProps) {
                         handleDeleteIncomeCategory(c.id)
                         setOpenCategoryMenuId(null)
                       }}
-                      className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-700"
+                      className="w-full text-left ui-btn ui-btn-ghost"
+                      style={{ width: '100%', justifyContent: 'flex-start', minHeight: 40, padding: '10px 10px', textTransform: 'none', letterSpacing: 0, color: 'var(--text-negative)' }}
                     >
                       Delete
                     </button>
@@ -533,13 +574,14 @@ export default function Settings({ onBack, onError }: SettingsProps) {
         <button
           type="button"
           onClick={() => openAddCategory('income')}
-          className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+          className="ui-btn ui-btn-primary"
+          style={{ minHeight: 40 }}
         >
-          + Add income category
+          Add income category
         </button>
       </section>
 
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-sm" style={{ color: 'var(--text-negative)' }}>{error}</p>}
 
       {accountForm && (
         <div className="fixed inset-0 z-20 flex items-end sm:items-center justify-center bg-black/50 p-4">

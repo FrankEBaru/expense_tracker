@@ -39,12 +39,11 @@ export const CHART = {
   },
 } as const
 
-/** Single class string for all chart hover tooltips: dark background, white text. */
-export const CHART_TOOLTIP_CLASS =
-  'absolute z-30 px-3 py-2 rounded-lg border border-gray-600 bg-gray-800 dark:bg-gray-900 text-white shadow-xl text-xs pointer-events-none'
+/** Tooltip container. Styled via CSS variables for theme consistency. */
+export const CHART_TOOLTIP_CLASS = 'ui-popover absolute z-30 px-3 py-2 text-xs pointer-events-none'
 
 /** Inner content for tooltip title (month label). */
-export const CHART_TOOLTIP_TITLE_CLASS = 'font-semibold border-b border-gray-600 pb-1.5 mb-1.5'
+export const CHART_TOOLTIP_TITLE_CLASS = 'ui-popover-title font-semibold pb-1.5 mb-1.5'
 
 /** Inner content for tooltip body (values list). */
 export const CHART_TOOLTIP_BODY_CLASS = 'space-y-1'

@@ -205,9 +205,6 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
           <h2 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
             Accounts
           </h2>
-          <span className="ui-badge" style={{ background: 'var(--color-bg-secondary)' }}>
-            {selectedAccountId ? 'Filtered' : 'All'}
-          </span>
         </div>
         {accountsLoading ? (
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Loading accounts…</p>
@@ -367,14 +364,14 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
       </div>
 
       <div className="grid grid-cols-3 gap-2 text-center">
-        <div className="ui-card-inner" style={{ background: 'rgba(61,171,106,0.12)', padding: 12, borderRadius: 16, border: '1px solid rgba(61,171,106,0.18)' }}>
-          <p className="text-xs" style={{ color: 'var(--text-positive)', fontWeight: 700 }}>Income</p>
+        <div className="ui-card-inner" style={{ background: 'rgba(61,171,106,0.18)', padding: 12, borderRadius: 16, border: '1px solid rgba(61,171,106,0.28)' }}>
+          <p className="text-xs" style={{ color: 'var(--text-primary)', fontWeight: 800 }}>Income</p>
           <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
             ${formatCurrency(summary.income)}
           </p>
         </div>
-        <div className="ui-card-inner" style={{ background: 'rgba(232,52,74,0.10)', padding: 12, borderRadius: 16, border: '1px solid rgba(232,52,74,0.18)' }}>
-          <p className="text-xs" style={{ color: 'var(--text-negative)', fontWeight: 700 }}>Expenses</p>
+        <div className="ui-card-inner" style={{ background: 'rgba(232,52,74,0.14)', padding: 12, borderRadius: 16, border: '1px solid rgba(232,52,74,0.26)' }}>
+          <p className="text-xs" style={{ color: 'var(--text-primary)', fontWeight: 800 }}>Expenses</p>
           <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
             ${formatCurrency(summary.expenses)}
           </p>
@@ -398,24 +395,27 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
           <h2 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
             Transactions
           </h2>
-          <CategoryFilterDropdown
-            expenseCategories={expenseCategories}
-            incomeCategories={incomeCategories}
-            selectedIds={selectedCategoryIds}
-            onChange={setSelectedCategoryIds}
-          />
-          <select
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value as SortOption)}
-            className="ui-select"
-            aria-label="Sort transactions"
-          >
-            <option value="date-desc">Date (newest)</option>
-            <option value="date-asc">Date (oldest)</option>
-            <option value="amount-desc">Amount (high)</option>
-            <option value="amount-asc">Amount (low)</option>
-            <option value="category">Category A–Z</option>
-          </select>
+          <div className="ui-pill flex flex-wrap items-stretch gap-2" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--border-softer)', padding: 6 }}>
+            <CategoryFilterDropdown
+              expenseCategories={expenseCategories}
+              incomeCategories={incomeCategories}
+              selectedIds={selectedCategoryIds}
+              onChange={setSelectedCategoryIds}
+            />
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value as SortOption)}
+              className="ui-select"
+              aria-label="Sort transactions"
+              style={{ width: 'auto', minHeight: 40, paddingTop: 8, paddingBottom: 8 }}
+            >
+              <option value="date-desc">Date (newest)</option>
+              <option value="date-asc">Date (oldest)</option>
+              <option value="amount-desc">Amount (high)</option>
+              <option value="amount-asc">Amount (low)</option>
+              <option value="category">Category A–Z</option>
+            </select>
+          </div>
         </div>
         <TransactionList
           transactions={filteredSortedTransactions}

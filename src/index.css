@@ -15,6 +15,10 @@
     --color-bg-dark: #1a1a1a;
     --color-bg-nav: #111111;
 
+    /* Subtle premium background (less harsh than flat mint). */
+    --bg-screen: radial-gradient(1200px 700px at 30% -10%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 55%),
+      linear-gradient(180deg, rgba(184, 240, 216, 0.86) 0%, rgba(184, 240, 216, 0.58) 100%);
+
     /* ── brand actions ── */
     --color-green: #3dab6a;
     --color-amber: #f5a623;
@@ -40,6 +44,12 @@
     --border-soft: rgba(17, 17, 17, 0.12);
     --border-softer: rgba(17, 17, 17, 0.08);
     --focus-ring: rgba(123, 97, 255, 0.45);
+
+    /* ── popovers/tooltips ── */
+    --popover-bg: rgba(17, 17, 17, 0.94);
+    --popover-border: rgba(255, 255, 255, 0.14);
+    --popover-text: rgba(255, 255, 255, 0.92);
+    --popover-muted: rgba(255, 255, 255, 0.72);
 
     /* ── radius ── */
     --radius-pill: 9999px;
@@ -90,6 +100,14 @@
     --border-soft: rgba(255, 255, 255, 0.14);
     --border-softer: rgba(255, 255, 255, 0.1);
     --focus-ring: rgba(96, 214, 200, 0.45);
+
+    --popover-bg: rgba(5, 13, 11, 0.94);
+    --popover-border: rgba(255, 255, 255, 0.14);
+    --popover-text: rgba(255, 255, 255, 0.92);
+    --popover-muted: rgba(255, 255, 255, 0.72);
+
+    --bg-screen: radial-gradient(900px 520px at 30% -10%, rgba(96, 214, 200, 0.12) 0%, rgba(96, 214, 200, 0) 55%),
+      linear-gradient(180deg, rgba(6, 21, 18, 1) 0%, rgba(5, 13, 11, 1) 100%);
   }
 
   html,
@@ -99,7 +117,7 @@
 
   body {
     font-family: var(--font-family);
-    background: var(--color-bg-screen);
+    background: var(--bg-screen);
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -204,6 +222,24 @@
     font-size: 14px;
   }
 
+  .ui-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M5.2 6.6 8 9.4l2.8-2.8' stroke='%23666666' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 38px;
+  }
+
+  .dark .ui-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M5.2 6.6 8 9.4l2.8-2.8' stroke='%23BBBBBB' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+
+  input[type='checkbox'] {
+    accent-color: var(--color-violet);
+    width: 16px;
+    height: 16px;
+  }
+
   .ui-input::placeholder {
     color: var(--text-muted);
   }
@@ -224,6 +260,21 @@
     background: var(--color-bg-card);
     border-radius: 24px;
     border: 1px solid var(--border-softer);
+  }
+
+  .ui-popover {
+    background: var(--popover-bg);
+    border: 1px solid var(--popover-border);
+    color: var(--popover-text);
+    border-radius: 14px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .ui-popover-title {
+    color: var(--popover-text);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
   }
 
   .ui-badge {
