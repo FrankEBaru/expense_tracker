@@ -375,13 +375,13 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
         <div
           className="ui-card-inner"
           style={{
-            background: 'rgba(61,171,106,0.30)',
+            background: '#ffffff',
             padding: 12,
             borderRadius: 16,
-            border: '1px solid rgba(61,171,106,0.52)',
+            border: '1px solid var(--border-softer)',
           }}
         >
-          <p className="text-xs" style={{ color: '#ffffff', fontWeight: 900 }}>
+          <p className="text-xs" style={{ color: 'var(--text-positive)', fontWeight: 900 }}>
             Income
           </p>
           <p className="text-sm font-semibold" style={{ color: 'var(--text-positive)', fontVariantNumeric: 'tabular-nums' }}>
@@ -391,13 +391,13 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
         <div
           className="ui-card-inner"
           style={{
-            background: 'rgba(232,52,74,0.24)',
+            background: '#ffffff',
             padding: 12,
             borderRadius: 16,
-            border: '1px solid rgba(232,52,74,0.48)',
+            border: '1px solid var(--border-softer)',
           }}
         >
-          <p className="text-xs" style={{ color: '#ffffff', fontWeight: 900 }}>
+          <p className="text-xs" style={{ color: 'var(--text-negative)', fontWeight: 900 }}>
             Expenses
           </p>
           <p className="text-sm font-semibold" style={{ color: 'var(--text-negative)', fontVariantNumeric: 'tabular-nums' }}>
@@ -407,13 +407,13 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
         <div
           className="ui-card-inner"
           style={{
-            background: 'rgba(17, 17, 17, 0.78)',
+            background: '#ffffff',
             padding: 12,
             borderRadius: 16,
-            border: '1px solid rgba(255, 255, 255, 0.12)',
+            border: '1px solid var(--border-softer)',
           }}
         >
-          <p className="text-xs" style={{ color: '#ffffff', fontWeight: 700 }}>
+          <p className="text-xs" style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>
             Net
           </p>
           <p
