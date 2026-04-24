@@ -197,34 +197,59 @@ export default function TransactionForm({
       : `Add ${type}`
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{title}</h2>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
+      <div className="ui-sheet w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between" style={{ padding: 16, borderBottom: '1px solid var(--border-softer)' }}>
+          <h2 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)' }}>{title}</h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded"
+            className="ui-btn ui-btn-ghost"
+            style={{ minHeight: 36, width: 40, padding: 0, textTransform: 'none', letterSpacing: 0 }}
             aria-label="Close"
           >
             ✕
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" style={{ padding: 16 }}>
           {!isEdit && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-              <div className="flex gap-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Type</label>
+              <div
+                className="ui-pill"
+                style={{
+                  background: 'var(--color-bg-secondary)',
+                  border: '1px solid var(--border-softer)',
+                  padding: 6,
+                  display: 'flex',
+                  gap: 6,
+                }}
+              >
                 {(['expense', 'income', 'transfer'] as const).map((t) => (
                   <button
                     key={t}
                     type="button"
                     onClick={() => setType(t)}
-                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium capitalize ${
-                      type === t
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
-                    }`}
+                    className="ui-btn"
+                    style={{
+                      flex: 1,
+                      minHeight: 40,
+                      padding: '10px 10px',
+                      textTransform: 'none',
+                      letterSpacing: 0,
+                      background:
+                        type === t
+                          ? t === 'expense'
+                            ? 'rgba(232,52,74,0.12)'
+                            : t === 'income'
+                              ? 'rgba(61,171,106,0.14)'
+                              : 'rgba(123,97,255,0.14)'
+                          : 'transparent',
+                      border: `1px solid ${type === t ? 'var(--border-soft)' : 'transparent'}`,
+                      color: 'var(--text-primary)',
+                      borderRadius: 9999,
+                      fontWeight: 800,
+                    }}
                   >
                     {t}
                   </button>
@@ -236,7 +261,7 @@ export default function TransactionForm({
           {type === 'transfer' ? (
             <>
               <div>
-                <label htmlFor="fromAccount" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="fromAccount" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
                   From account
                 </label>
                 <select
@@ -244,7 +269,7 @@ export default function TransactionForm({
                   value={fromAccountId}
                   onChange={(e) => setFromAccountId(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="ui-select"
                 >
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -254,7 +279,7 @@ export default function TransactionForm({
                 </select>
               </div>
               <div>
-                <label htmlFor="toAccount" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="toAccount" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
                   To account
                 </label>
                 <select
@@ -262,7 +287,7 @@ export default function TransactionForm({
                   value={toAccountId}
                   onChange={(e) => setToAccountId(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="ui-select"
                 >
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -275,7 +300,7 @@ export default function TransactionForm({
           ) : (
             <>
               <div>
-                <label htmlFor="account" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="account" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
                   Account
                 </label>
                 <select
@@ -283,7 +308,7 @@ export default function TransactionForm({
                   value={accountId}
                   onChange={(e) => setAccountId(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="ui-select"
                 >
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -293,7 +318,7 @@ export default function TransactionForm({
                 </select>
               </div>
               <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="category" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
                   Category
                 </label>
                 <select
@@ -301,7 +326,7 @@ export default function TransactionForm({
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="ui-select"
                 >
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -314,7 +339,7 @@ export default function TransactionForm({
           )}
 
           <div>
-            <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="amount" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
               Amount
             </label>
             <input
@@ -326,11 +351,11 @@ export default function TransactionForm({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="ui-input"
             />
           </div>
           <div>
-            <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="date" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
               Date
             </label>
             <input
@@ -339,11 +364,11 @@ export default function TransactionForm({
               value={date}
               onChange={(e) => setDate(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="ui-input"
             />
           </div>
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="description" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
               Description (optional)
             </label>
             <input
@@ -353,22 +378,24 @@ export default function TransactionForm({
               onChange={(e) => setDescription(e.target.value)}
               maxLength={TRANSACTION_DESCRIPTION_MAX_LENGTH}
               placeholder="e.g. Lunch at café"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="ui-input"
             />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <div className="flex gap-2 pt-2">
+          {error && <p className="text-sm" style={{ color: 'var(--text-negative)' }}>{error}</p>}
+          <div className="flex gap-2 pt-2 safe-bottom">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+              className="ui-btn ui-btn-secondary"
+              style={{ flex: 1 }}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              className="ui-btn ui-btn-primary"
+              style={{ flex: 1 }}
             >
               {saving ? 'Saving…' : isEdit ? 'Update' : 'Add'}
             </button>

@@ -64,12 +64,19 @@ export default function Auth({ onSuccess }: AuthProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 p-6">
-        <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Finance</h1>
+    <div className="min-h-screen flex items-center justify-center p-6" style={{ background: 'var(--color-bg-screen)' }}>
+      <div className="w-full max-w-sm ui-card" style={{ padding: 20 }}>
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+            Welcome back
+          </div>
+          <h1 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.01em', color: 'var(--text-primary)' }}>
+            Finance
+          </h1>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
               Email
             </label>
             <input
@@ -79,11 +86,11 @@ export default function Auth({ onSuccess }: AuthProps) {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="ui-input"
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="password" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
               Password
             </label>
             <input
@@ -94,7 +101,7 @@ export default function Auth({ onSuccess }: AuthProps) {
               required
               minLength={6}
               autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="ui-input"
             />
           </div>
           {mode === 'login' && (
@@ -102,16 +109,16 @@ export default function Auth({ onSuccess }: AuthProps) {
               type="button"
               onClick={handleForgotPassword}
               disabled={loading}
-              className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50"
+              className="ui-btn ui-btn-ghost"
+              style={{ width: '100%', justifyContent: 'center', textTransform: 'none', letterSpacing: 0 }}
             >
               Forgot password?
             </button>
           )}
           {message && (
             <p
-              className={`text-sm ${
-                message.type === 'error' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
-              }`}
+              className="text-sm"
+              style={{ color: message.type === 'error' ? 'var(--text-negative)' : 'var(--text-positive)' }}
             >
               {message.text}
             </p>
@@ -119,7 +126,8 @@ export default function Auth({ onSuccess }: AuthProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="ui-btn ui-btn-primary"
+            style={{ width: '100%' }}
           >
             {loading ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Sign up'}
           </button>
@@ -130,7 +138,8 @@ export default function Auth({ onSuccess }: AuthProps) {
             setMode(mode === 'login' ? 'signup' : 'login')
             setMessage(null)
           }}
-          className="mt-4 w-full text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+          className="ui-btn ui-btn-secondary"
+          style={{ marginTop: 12, width: '100%', textTransform: 'none', letterSpacing: 0 }}
         >
           {mode === 'login' ? 'Need an account? Sign up' : 'Already have an account? Log in'}
         </button>

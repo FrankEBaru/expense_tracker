@@ -13,6 +13,7 @@ import { useCategories } from './hooks/useCategories'
 import type { Transaction } from './types/transaction'
 import type { TransactionInsert } from './types/transaction'
 import type { TransactionUpdate } from './types/transaction'
+import PillNav, { type NavItemId } from './components/ui/PillNav'
 
 type View = 'dashboard' | 'settings' | 'insights' | 'budgets' | 'resetPassword'
 
@@ -117,23 +118,82 @@ function App() {
     closeForm()
   }, [refetchAccounts, closeForm])
 
-  const openSettings = useCallback(() => setView('settings'), [])
   const closeSettings = useCallback(() => setView('dashboard'), [])
-  const openInsights = useCallback(() => setView('insights'), [])
   const closeInsights = useCallback(() => setView('dashboard'), [])
   const openBudgets = useCallback(() => setView('budgets'), [])
   const closeBudgets = useCallback(() => setView('dashboard'), [])
 
+  const navItems = useRef([
+    {
+      id: 'dashboard' as const,
+      label: 'Home',
+      colorVar: 'var(--color-green)' as const,
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M3 7.2L8 3l5 4.2V13a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 13V7.2Z"
+            stroke="white"
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          />
+          <path d="M6.3 14.5V10.3h3.4v4.2" stroke="white" strokeWidth="1.6" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+    {
+      id: 'insights' as const,
+      label: 'Insights',
+      colorVar: 'var(--color-violet)' as const,
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 12V9.3M6.5 12V6.6M10 12V8M13 12V4" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
+      id: 'budgets' as const,
+      label: 'Budgets',
+      colorVar: 'var(--color-amber)' as const,
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="3" y="4" width="10" height="9" rx="2" stroke="white" strokeWidth="1.6" />
+          <path d="M5.5 7h5" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M5.5 9.7h3.2" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
+      id: 'settings' as const,
+      label: 'Settings',
+      colorVar: 'var(--color-violet)' as const,
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M8 10.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Z"
+            stroke="white"
+            strokeWidth="1.6"
+          />
+          <path
+            d="M13.2 8a5.3 5.3 0 0 0-.06-.78l1.02-.78-1.2-2.08-1.23.4a5.4 5.4 0 0 0-1.35-.78L10.2 2H5.8l-.2 1.2c-.48.2-.93.47-1.35.78l-1.23-.4-1.2 2.08 1.02.78A5.3 5.3 0 0 0 2.8 8c0 .27.02.53.06.78l-1.02.78 1.2 2.08 1.23-.4c.42.3.87.57 1.35.78l.2 1.2h4.4l.2-1.2c.48-.2.93-.47 1.35-.78l1.23.4 1.2-2.08-1.02-.78c.04-.25.06-.51.06-.78Z"
+            stroke="white"
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ),
+    },
+  ])
+
   if (!isSupabaseConfigured) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-        <div className="text-center text-gray-600 dark:text-gray-400 max-w-md">
-          <p className="font-medium text-gray-800 dark:text-gray-200 mb-2">Supabase not configured</p>
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: 'var(--color-bg-screen)' }}>
+        <div className="ui-card max-w-md w-full p-5 text-center">
+          <p className="font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Supabase not configured</p>
           <p className="text-sm">
-            Copy <code className="bg-gray-200 px-1 rounded">.env.example</code> to{' '}
-            <code className="bg-gray-200 px-1 rounded">.env</code> and set{' '}
-            <code className="bg-gray-200 px-1 rounded">VITE_SUPABASE_URL</code> and{' '}
-            <code className="bg-gray-200 px-1 rounded">VITE_SUPABASE_ANON_KEY</code>.
+            Copy <code className="px-1 rounded" style={{ background: 'var(--color-bg-secondary)' }}>.env.example</code> to{' '}
+            <code className="px-1 rounded" style={{ background: 'var(--color-bg-secondary)' }}>.env</code> and set{' '}
+            <code className="px-1 rounded" style={{ background: 'var(--color-bg-secondary)' }}>VITE_SUPABASE_URL</code> and{' '}
+            <code className="px-1 rounded" style={{ background: 'var(--color-bg-secondary)' }}>VITE_SUPABASE_ANON_KEY</code>.
           </p>
         </div>
       </div>
@@ -142,8 +202,8 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <p className="text-gray-600 dark:text-gray-400">Loading…</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg-screen)' }}>
+        <p style={{ color: 'var(--text-secondary)' }}>Loading…</p>
       </div>
     )
   }
@@ -152,60 +212,45 @@ function App() {
     return <Auth onSuccess={() => {}} />
   }
 
+  const activeNav = (view === 'resetPassword' ? 'dashboard' : view) as NavItemId
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
-      <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-          {view === 'dashboard' ? 'Finance' : view === 'insights' ? 'Insights' : view === 'budgets' ? 'Budgets' : 'Settings'}
-        </h1>
-        <div className="flex items-center gap-3">
-          {view === 'dashboard' && (
-            <>
-              <button
-                type="button"
-                onClick={openBudgets}
-                className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                Budgets
-              </button>
-              <button
-                type="button"
-                onClick={openInsights}
-                className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                Insights
-              </button>
-            </>
-          )}
-          {(view === 'dashboard' || view === 'insights' || view === 'budgets') && (
+    <div className="min-h-screen pb-28" style={{ background: 'var(--color-bg-screen)' }}>
+      <header className="ui-container" style={{ paddingTop: 18, paddingBottom: 12 }}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div style={{ fontSize: 10, color: 'var(--text-secondary)', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700 }}>
+              Expense Tracker
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.01em', lineHeight: 1.1 }}>
+              {view === 'dashboard' ? 'Finance' : view === 'insights' ? 'Insights' : view === 'budgets' ? 'Budgets' : view === 'settings' ? 'Settings' : 'Finance'}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
-              onClick={openSettings}
-              className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+              onClick={toggleTheme}
+              className="ui-btn ui-btn-ghost"
+              aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={dark ? 'Light mode' : 'Dark mode'}
+              style={{ minHeight: 40, padding: '10px 12px', textTransform: 'none', letterSpacing: '0' }}
             >
-              Settings
+              <span aria-hidden style={{ fontSize: 14 }}>{dark ? '☀️' : '🌙'}</span>
+              <span className="sr-only">{dark ? 'Light mode' : 'Dark mode'}</span>
             </button>
-          )}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-            aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-            title={dark ? 'Light mode' : 'Dark mode'}
-          >
-            {dark ? '☀️' : '🌙'}
-          </button>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            Log out
-          </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="ui-btn ui-btn-secondary"
+              style={{ minHeight: 40, padding: '10px 12px' }}
+            >
+              Log out
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-4">
+      <main className="ui-container" style={{ paddingBottom: 16 }}>
         {view === 'dashboard' && (
           <Dashboard
             accounts={accounts}
@@ -231,14 +276,26 @@ function App() {
       </main>
 
       {view === 'dashboard' && (
-        <button
-          type="button"
-          onClick={openAddForm}
-          className="fixed bottom-6 right-6 z-10 py-3 px-6 bg-blue-600 text-white font-medium rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-          aria-label="Add transaction"
-        >
-          Add transaction
-        </button>
+        <div className="fixed left-0 right-0 bottom-[86px] z-10" style={{ paddingLeft: 'var(--space-screen-h)', paddingRight: 'var(--space-screen-h)' }}>
+          <div className="mx-auto w-full max-w-2xl flex justify-end">
+            <button type="button" onClick={openAddForm} className="ui-btn ui-btn-primary" aria-label="Add transaction">
+              Add
+            </button>
+          </div>
+        </div>
+      )}
+
+      {view !== 'resetPassword' && (
+        <PillNav
+          items={navItems.current}
+          activeId={activeNav}
+          onSelect={(id) => {
+            if (id === 'dashboard') setView('dashboard')
+            if (id === 'insights') setView('insights')
+            if (id === 'budgets') setView('budgets')
+            if (id === 'settings') setView('settings')
+          }}
+        />
       )}
 
       {showForm && txMutations && (
@@ -257,8 +314,15 @@ function App() {
 
       {toast && (
         <div
-          className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-lg bg-gray-800 text-white text-sm shadow-lg dark:bg-gray-700 max-w-[90vw]"
+          className="fixed left-1/2 -translate-x-1/2 z-30 px-4 py-2 max-w-[90vw]"
           role="alert"
+          style={{
+            bottom: 92,
+            borderRadius: 14,
+            background: 'var(--color-bg-nav)',
+            color: 'var(--text-on-accent)',
+            border: '1px solid rgba(255,255,255,0.10)',
+          }}
         >
           {toast.message}
         </div>

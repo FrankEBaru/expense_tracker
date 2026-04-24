@@ -16,7 +16,7 @@ import type { Transaction } from '../types/transaction'
 export function useBudgetPeriodTransactions(asOf?: Date) {
   const asOfRef = useRef(asOf ?? new Date())
   const asOfDate = asOf ?? asOfRef.current
-  const range = useMemo(() => getBudgetPeriodsRange(asOfDate), [asOfDate.getTime()])
+  const range = useMemo(() => getBudgetPeriodsRange(asOfDate), [asOfDate])
   const { transactions, loading, error, refetch } = useTransactionsRange(range.start, range.end)
 
   const getTransactionsForPeriod = useCallback(

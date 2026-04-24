@@ -92,6 +92,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ accounts, accountsLoading, accountsError, onAddTransaction: _onAddTransaction, onEditTransaction, onMutationsReady, onAccountsRefetch, onError, onOpenBudgets }: DashboardProps) {
+  void _onAddTransaction
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
@@ -189,23 +190,34 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
 
   if (accountsError) {
     return (
-      <p className="text-red-600 text-sm p-4 dark:text-red-400">Failed to load accounts: {accountsError}</p>
+      <div className="ui-card p-4">
+        <p className="text-sm" style={{ color: 'var(--text-negative)' }}>
+          Failed to load accounts: {accountsError}
+        </p>
+      </div>
     )
   }
 
   return (
     <div className="space-y-4">
-      <section className="border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-800">
-        <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Accounts</h2>
+      <section className="ui-card" style={{ padding: 'var(--space-card)' }}>
+        <div className="flex items-center justify-between mb-3">
+          <h2 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+            Accounts
+          </h2>
+          <span className="ui-badge" style={{ background: 'var(--color-bg-secondary)' }}>
+            {selectedAccountId ? 'Filtered' : 'All'}
+          </span>
+        </div>
         {accountsLoading ? (
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Loading accounts…</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Loading accounts…</p>
         ) : accounts.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400">No accounts yet. Add one in Settings.</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>No accounts yet. Add one in Settings.</p>
         ) : (
           <>
             <div className="mb-3">
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
-              <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+              <p style={{ fontSize: 10, color: 'var(--text-secondary)' }}>Your balance is</p>
+              <p style={{ fontSize: 'var(--font-hero)', fontWeight: 900, letterSpacing: '-0.02em', lineHeight: 1.05 }}>
                 {(() => {
                   const visible = accounts.filter((a) => !a.hide_balance)
                   if (visible.length === 0) return '—'
@@ -214,16 +226,20 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
                 })()}
               </p>
             </div>
-            <ul className="space-y-1">
+            <ul className="space-y-2">
               <li>
                 <button
                   type="button"
                   onClick={() => setSelectedAccountId(null)}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium ${
-                    selectedAccountId === null
-                      ? 'bg-blue-100 border border-blue-300 text-blue-800 dark:bg-blue-900/40 dark:border-blue-700 dark:text-blue-200'
-                      : 'border border-transparent text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700'
-                  }`}
+                  className="w-full text-left ui-card-inner"
+                  style={{
+                    padding: '12px 14px',
+                    background: selectedAccountId === null ? 'var(--color-bg-secondary)' : 'transparent',
+                    border: `1px solid ${selectedAccountId === null ? 'var(--border-soft)' : 'transparent'}`,
+                    color: 'var(--text-primary)',
+                    minHeight: 44,
+                    borderRadius: 16,
+                  }}
                 >
                   All
                 </button>
@@ -238,11 +254,19 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
                       onClick={() =>
                         setSelectedAccountId(selectedAccountId === acc.id ? null : acc.id)
                       }
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium flex justify-between items-center gap-2 ${
-                        selectedAccountId === acc.id
-                          ? 'bg-blue-100 border border-blue-300 text-blue-800 dark:bg-blue-900/40 dark:border-blue-700 dark:text-blue-200'
-                          : 'border border-transparent text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700'
-                      }`}
+                      className="w-full text-left ui-card-inner"
+                      style={{
+                        padding: '12px 14px',
+                        background: selectedAccountId === acc.id ? 'var(--color-bg-secondary)' : 'transparent',
+                        border: `1px solid ${selectedAccountId === acc.id ? 'var(--border-soft)' : 'transparent'}`,
+                        color: 'var(--text-primary)',
+                        minHeight: 44,
+                        borderRadius: 16,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 10,
+                      }}
                     >
                       <span className="flex items-center gap-2 min-w-0">
                         <span
@@ -252,7 +276,7 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
                         />
                         <span className="truncate">{acc.name}</span>
                       </span>
-                      <span className="shrink-0">{balanceStr}</span>
+                      <span className="shrink-0" style={{ fontVariantNumeric: 'tabular-nums' }}>{balanceStr}</span>
                     </button>
                   </li>
                 )
@@ -262,29 +286,33 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
         )}
       </section>
 
-      <section className="border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-800">
+      <section className="ui-card" style={{ padding: 'var(--space-card)' }}>
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300">Budgets</h2>
+          <h2 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+            Budgets
+          </h2>
           {onOpenBudgets && (
             <button
               type="button"
               onClick={onOpenBudgets}
-              className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+              className="ui-btn ui-btn-ghost"
+              style={{ minHeight: 32, padding: '6px 10px', textTransform: 'none', letterSpacing: 0 }}
             >
               View all
             </button>
           )}
         </div>
         {budgetsLoading || budgetTxLoading ? (
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Loading…</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Loading…</p>
         ) : budgets.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             No budgets set. Set up budgets to track spending.{' '}
             {onOpenBudgets && (
               <button
                 type="button"
                 onClick={onOpenBudgets}
-                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                className="ui-btn ui-btn-secondary"
+                style={{ minHeight: 32, padding: '6px 10px', textTransform: 'none', letterSpacing: 0, display: 'inline-flex' }}
               >
                 Set up
               </button>
@@ -297,13 +325,13 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
               if (!status) return null
               return (
                 <li key={budget.id} className="flex items-center justify-between gap-2 text-sm">
-                  <span className="font-medium text-gray-800 dark:text-gray-200 truncate">{budget.name}</span>
+                  <span className="font-medium truncate" style={{ color: 'var(--text-primary)' }}>{budget.name}</span>
                   {status.isOver ? (
-                    <span className="font-medium text-red-600 dark:text-red-400 shrink-0">
+                    <span className="font-medium shrink-0" style={{ color: 'var(--text-negative)' }}>
                       ${formatCurrency(-status.remaining)} over
                     </span>
                   ) : (
-                    <span className="font-medium text-green-600 dark:text-green-400 shrink-0">
+                    <span className="font-medium shrink-0" style={{ color: 'var(--text-positive)' }}>
                       ${formatCurrency(status.remaining)} left
                     </span>
                   )}
@@ -318,18 +346,20 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
         <button
           type="button"
           onClick={prevMonth}
-          className="p-2 rounded-md text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600"
+          className="ui-btn ui-btn-secondary"
+          style={{ minHeight: 40, width: 44, padding: 0, borderRadius: 16 }}
           aria-label="Previous month"
         >
           ←
         </button>
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.02em', color: 'var(--text-secondary)' }}>
           {formatMonthLabel(selectedMonth)}
         </span>
         <button
           type="button"
           onClick={nextMonth}
-          className="p-2 rounded-md text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-600"
+          className="ui-btn ui-btn-secondary"
+          style={{ minHeight: 40, width: 44, padding: 0, borderRadius: 16 }}
           aria-label="Next month"
         >
           →
@@ -337,21 +367,21 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
       </div>
 
       <div className="grid grid-cols-3 gap-2 text-center">
-        <div className="bg-green-50 border border-green-200 rounded-lg p-2 dark:bg-green-900/20 dark:border-green-800">
-          <p className="text-xs text-green-700 dark:text-green-400">Income</p>
-          <p className="text-sm font-semibold text-green-800 dark:text-green-300">
+        <div className="ui-card-inner" style={{ background: 'rgba(61,171,106,0.12)', padding: 12, borderRadius: 16, border: '1px solid rgba(61,171,106,0.18)' }}>
+          <p className="text-xs" style={{ color: 'var(--text-positive)', fontWeight: 700 }}>Income</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
             ${formatCurrency(summary.income)}
           </p>
         </div>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-2 dark:bg-red-900/20 dark:border-red-800">
-          <p className="text-xs text-red-700 dark:text-red-400">Expenses</p>
-          <p className="text-sm font-semibold text-red-800 dark:text-red-300">
+        <div className="ui-card-inner" style={{ background: 'rgba(232,52,74,0.10)', padding: 12, borderRadius: 16, border: '1px solid rgba(232,52,74,0.18)' }}>
+          <p className="text-xs" style={{ color: 'var(--text-negative)', fontWeight: 700 }}>Expenses</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
             ${formatCurrency(summary.expenses)}
           </p>
         </div>
-        <div className="bg-gray-100 border border-gray-200 rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600">
-          <p className="text-xs text-gray-700 dark:text-gray-400">Net</p>
-          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+        <div className="ui-card-inner" style={{ background: 'var(--color-bg-secondary)', padding: 12, borderRadius: 16, border: '1px solid var(--border-softer)' }}>
+          <p className="text-xs" style={{ color: 'var(--text-secondary)', fontWeight: 700 }}>Net</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
             ${formatCurrency(summary.net)}
           </p>
         </div>
@@ -365,7 +395,9 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
 
       <section>
         <div className="flex flex-wrap items-center gap-2 mb-2">
-          <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300">Transactions</h2>
+          <h2 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+            Transactions
+          </h2>
           <CategoryFilterDropdown
             expenseCategories={expenseCategories}
             incomeCategories={incomeCategories}
@@ -375,7 +407,7 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
           <select
             value={sortOption}
             onChange={(e) => setSortOption(e.target.value as SortOption)}
-            className="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+            className="ui-select"
             aria-label="Sort transactions"
           >
             <option value="date-desc">Date (newest)</option>

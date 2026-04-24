@@ -1,10 +1,255 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Safe area for mobile (e.g. iPhone notch) */
+@layer base {
+  :root {
+    color-scheme: light;
+
+    /* ── surfaces ── */
+    --color-bg-screen: #b8f0d8;
+    --color-bg-card: #ffffff;
+    --color-bg-secondary: #f4f4f4;
+    --color-bg-dark: #1a1a1a;
+    --color-bg-nav: #111111;
+
+    /* ── brand actions ── */
+    --color-green: #3dab6a;
+    --color-amber: #f5a623;
+    --color-violet: #7b61ff;
+    --color-orange: #ff6b35;
+    --color-teal: #60d6c8;
+
+    /* ── transaction palette (fallback cycle) ── */
+    --tx-1: var(--color-amber);
+    --tx-2: var(--color-violet);
+    --tx-3: var(--color-green);
+    --tx-4: var(--color-teal);
+
+    /* ── text ── */
+    --text-primary: #111111;
+    --text-secondary: #666666;
+    --text-muted: #888888;
+    --text-positive: var(--color-green);
+    --text-negative: #e8344a;
+    --text-on-accent: #ffffff;
+
+    /* ── borders/focus ── */
+    --border-soft: rgba(17, 17, 17, 0.12);
+    --border-softer: rgba(17, 17, 17, 0.08);
+    --focus-ring: rgba(123, 97, 255, 0.45);
+
+    /* ── radius ── */
+    --radius-pill: 9999px;
+    --radius-card: 22px;
+    --radius-inner: 16px;
+    --radius-icon: 12px;
+
+    /* ── spacing ── */
+    --space-screen-h: 20px;
+    --space-screen-t: 52px;
+    --space-card: 16px;
+    --space-section: 22px;
+
+    /* ── sizing ── */
+    --size-action-icon: 52px;
+    --size-nav-icon: 40px;
+
+    /* ── typography ── */
+    --font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+      'Apple Color Emoji', 'Segoe UI Emoji';
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+      monospace;
+    --font-hero: clamp(28px, 7vw, 36px);
+    --font-title: 22px;
+    --font-amount: 16px;
+    --font-body: 14px;
+    --font-meta: 12px;
+    --font-label: 10px;
+
+    --weight-black: 900;
+    --weight-bold: 700;
+    --weight-regular: 400;
+  }
+
+  .dark {
+    color-scheme: dark;
+
+    /* Keep mint identity, but shift to a deeper “night mint”. */
+    --color-bg-screen: #061512;
+    --color-bg-card: #0c1d19;
+    --color-bg-secondary: #0a1815;
+    --color-bg-dark: #050d0b;
+    --color-bg-nav: #050d0b;
+
+    --text-primary: rgba(255, 255, 255, 0.92);
+    --text-secondary: rgba(255, 255, 255, 0.68);
+    --text-muted: rgba(255, 255, 255, 0.55);
+    --border-soft: rgba(255, 255, 255, 0.14);
+    --border-softer: rgba(255, 255, 255, 0.1);
+    --focus-ring: rgba(96, 214, 200, 0.45);
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    font-family: var(--font-family);
+    background: var(--color-bg-screen);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: rgba(96, 214, 200, 0.35);
+  }
+}
+
+@layer components {
+  .ui-container {
+    @apply mx-auto w-full max-w-2xl;
+    padding-left: var(--space-screen-h);
+    padding-right: var(--space-screen-h);
+  }
+
+  .ui-card {
+    background: var(--color-bg-card);
+    border-radius: var(--radius-card);
+    border: 1px solid var(--border-softer);
+  }
+
+  .ui-card-inner {
+    border-radius: var(--radius-inner);
+  }
+
+  .ui-pill {
+    border-radius: var(--radius-pill);
+  }
+
+  .ui-focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+
+  .ui-btn {
+    @apply inline-flex items-center justify-center gap-2;
+    min-height: 44px;
+    padding: 10px 14px;
+    border-radius: var(--radius-pill);
+    font-weight: var(--weight-bold);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: transform 120ms ease, background-color 120ms ease, color 120ms ease, border-color 120ms ease,
+      opacity 120ms ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ui-btn:active {
+    transform: translateY(1px);
+  }
+
+  .ui-btn:disabled,
+  .ui-input:disabled,
+  .ui-select:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .ui-btn-primary {
+    background: var(--color-amber);
+    color: #111111;
+  }
+
+  .ui-btn-primary:hover {
+    filter: brightness(0.98);
+  }
+
+  .ui-btn-secondary {
+    background: var(--color-bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-softer);
+  }
+
+  .ui-btn-ghost {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid transparent;
+  }
+
+  .ui-btn-ghost:hover {
+    background: rgba(17, 17, 17, 0.06);
+  }
+
+  .dark .ui-btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .ui-input,
+  .ui-select {
+    @apply w-full;
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--border-soft);
+    background: var(--color-bg-card);
+    color: var(--text-primary);
+    font-size: 14px;
+  }
+
+  .ui-input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .ui-input:focus,
+  .ui-select:focus,
+  .ui-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+
+  .ui-input:focus:not(:focus-visible),
+  .ui-select:focus:not(:focus-visible) {
+    box-shadow: none;
+  }
+
+  .ui-sheet {
+    background: var(--color-bg-card);
+    border-radius: 24px;
+    border: 1px solid var(--border-softer);
+  }
+
+  .ui-badge {
+    @apply inline-flex items-center;
+    min-height: 22px;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border: 1px solid var(--border-softer);
+    background: rgba(255, 255, 255, 0.65);
+    color: var(--text-primary);
+  }
+
+  .dark .ui-badge {
+    background: rgba(0, 0, 0, 0.18);
+  }
+}
+
+/* Safe area helpers (mobile notch/home indicator) */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .pb-safe {
     padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }

@@ -163,10 +163,12 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
   if (budgetsError) {
     return (
       <div className="space-y-4">
-        <button type="button" onClick={onBack} className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">
+        <button type="button" onClick={onBack} className="ui-btn ui-btn-ghost" style={{ minHeight: 36, padding: '8px 10px', textTransform: 'none', letterSpacing: 0 }}>
           ← Back
         </button>
-        <p className="text-red-600 dark:text-red-400 text-sm">{budgetsError}</p>
+        <div className="ui-card p-4">
+          <p className="text-sm" style={{ color: 'var(--text-negative)' }}>{budgetsError}</p>
+        </div>
       </div>
     )
   }
@@ -177,36 +179,40 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
         <button
           type="button"
           onClick={onBack}
-          className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+          className="ui-btn ui-btn-ghost"
+          style={{ minHeight: 36, padding: '8px 10px', textTransform: 'none', letterSpacing: 0 }}
         >
           ← Back
         </button>
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Budgets</h2>
+        <h2 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.01em', color: 'var(--text-primary)' }}>Budgets</h2>
         <button
           type="button"
           onClick={openAddForm}
-          className="text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+          className="ui-btn ui-btn-primary"
+          style={{ minHeight: 36, padding: '8px 12px' }}
         >
-          + Add budget
+          Add
         </button>
       </div>
 
-      <p className="text-sm text-gray-500 dark:text-gray-400">
+      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
         Showing status for the current period. Weekly resets Monday–Sunday; biweekly uses 1–14 and 15–end of month.
       </p>
 
       {loading ? (
-        <p className="text-gray-500 dark:text-gray-400 text-sm">Loading…</p>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Loading…</p>
       ) : budgets.length === 0 ? (
-        <div className="border border-gray-200 dark:border-gray-600 rounded-lg p-6 bg-white dark:bg-gray-800 text-center">
-          <p className="text-gray-600 dark:text-gray-400 mb-3">No budgets yet.</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Set spending limits by period and category to track how much you have left.</p>
+        <div className="ui-card p-6 text-center">
+          <p style={{ color: 'var(--text-primary)', fontWeight: 800, marginBottom: 8 }}>No budgets yet.</p>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)', marginBottom: 12 }}>
+            Set spending limits by period and category to track how much you have left.
+          </p>
           <button
             type="button"
             onClick={openAddForm}
-            className="text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            className="ui-btn ui-btn-primary"
           >
-            + Add budget
+            Add budget
           </button>
         </div>
       ) : (
@@ -221,17 +227,18 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
             return (
               <li
                 key={budget.id}
-                className="border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-800"
+                className="ui-card"
+                style={{ padding: 'var(--space-card)' }}
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="min-w-0">
-                    <h3 className="font-medium text-gray-800 dark:text-gray-200 truncate">{budget.name}</h3>
+                    <h3 className="font-medium truncate" style={{ color: 'var(--text-primary)' }}>{budget.name}</h3>
                     <div className="flex flex-wrap gap-1.5 mt-1">
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                      <span className="ui-badge" style={{ background: 'var(--color-bg-secondary)', color: 'var(--text-secondary)' }}>
                         {PERIOD_LABELS[budget.period_type]}
                       </span>
                       {budget.cumulative && (
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200">
+                        <span className="ui-badge" style={{ background: 'rgba(245,166,35,0.20)', borderColor: 'rgba(245,166,35,0.25)' }}>
                           Cumulative
                         </span>
                       )}
@@ -241,28 +248,31 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
                     <button
                       type="button"
                       onClick={() => setMenuBudgetId(menuBudgetId === budget.id ? null : budget.id)}
-                      className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-sm"
+                      className="ui-btn ui-btn-ghost"
+                      style={{ minHeight: 36, width: 40, padding: 0, textTransform: 'none', letterSpacing: 0 }}
                       aria-label="Budget actions"
                       aria-expanded={menuBudgetId === budget.id}
                     >
                       ⋮
                     </button>
                     {menuBudgetId === budget.id && (
-                      <div className="absolute right-0 top-full mt-1 z-20 min-w-[7rem] rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800 py-1">
+                      <div className="absolute right-0 top-full mt-1 z-20 min-w-[8rem] ui-card" style={{ padding: 6 }}>
                         <button
                           type="button"
                           onClick={() => {
                             openEditForm(budget)
                             setMenuBudgetId(null)
                           }}
-                          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                          className="w-full text-left ui-btn ui-btn-ghost"
+                          style={{ width: '100%', justifyContent: 'flex-start', minHeight: 40, padding: '10px 10px', textTransform: 'none', letterSpacing: 0 }}
                         >
                           Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => void handleDeleteBudget(budget.id)}
-                          className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-700"
+                          className="w-full text-left ui-btn ui-btn-ghost"
+                          style={{ width: '100%', justifyContent: 'flex-start', minHeight: 40, padding: '10px 10px', textTransform: 'none', letterSpacing: 0, color: 'var(--text-negative)' }}
                         >
                           Delete
                         </button>
@@ -271,45 +281,60 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
                   </div>
                 </div>
                 {budget.category_ids.length > 0 && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  <p className="text-xs mb-2" style={{ color: 'var(--text-secondary)' }}>
                     Categories: {budget.category_ids.map(categoryName).join(', ')}
                   </p>
                 )}
                 {status.carried > 0 && (
-                  <p className="text-xs text-amber-700 dark:text-amber-400 mb-2">
+                  <p className="text-xs mb-2" style={{ color: 'var(--color-amber)' }}>
                     Including ${formatCurrency(status.carried)} carried from last period.
                   </p>
                 )}
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-gray-600 dark:text-gray-400">
+                  <span style={{ color: 'var(--text-secondary)' }}>
                     ${formatCurrency(spent)} of ${formatCurrency(effective)} spent
                   </span>
                   {status.isOver ? (
-                    <span className="font-medium text-red-600 dark:text-red-400">
+                    <span className="font-medium" style={{ color: 'var(--text-negative)' }}>
                       ${formatCurrency(-status.remaining)} over
                     </span>
                   ) : (
-                    <span className="font-medium text-green-600 dark:text-green-400">
+                    <span className="font-medium" style={{ color: 'var(--text-positive)' }}>
                       ${formatCurrency(status.remaining)} left
                     </span>
                   )}
                 </div>
                 <div
-                  className="h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex"
+                  className="h-2 rounded-full overflow-hidden flex"
                   role="progressbar"
                   aria-valuenow={effective > 0 ? spent : 0}
                   aria-valuemin={0}
                   aria-valuemax={effective}
                   aria-label={`Budget progress: ${formatCurrency(spent)} spent of ${formatCurrency(effective)}`}
+                  style={{ background: 'rgba(17,17,17,0.10)' }}
                 >
                   <div
-                    className="h-full bg-blue-500 dark:bg-blue-600 transition-all"
+                    className="h-full transition-all"
                     style={{ width: `${pct * 100}%` }}
+                    aria-hidden
+                    title="Spent"
+                  />
+                  <div
+                    className="h-full transition-all"
+                    style={{ width: `${pct * 100}%`, background: 'var(--color-violet)' }}
                   />
                   {status.isOver && (
                     <div
-                      className="h-full bg-red-500 dark:bg-red-600 transition-all"
+                      className="h-full transition-all"
                       style={{ width: `${overPct * 100}%` }}
+                      aria-hidden
+                      title="Over"
+                    />
+                  )}
+                  {status.isOver && (
+                    <div
+                      className="h-full transition-all"
+                      style={{ width: `${overPct * 100}%`, background: 'var(--text-negative)' }}
                     />
                   )}
                 </div>
@@ -321,16 +346,16 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
 
       {formOpen && (
         <div className="fixed inset-0 z-30 flex items-center justify-center p-4 bg-black/50" aria-modal="true" role="dialog">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto p-4 border border-gray-200 dark:border-gray-600">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+          <div className="ui-sheet max-w-md w-full max-h-[90vh] overflow-y-auto" style={{ padding: 16 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 12 }}>
               {editingBudget ? 'Edit budget' : 'Add budget'}
             </h3>
             {formError && (
-              <p className="text-sm text-red-600 dark:text-red-400 mb-3">{formError}</p>
+              <p className="text-sm mb-3" style={{ color: 'var(--text-negative)' }}>{formError}</p>
             )}
             <div className="space-y-3">
               <div>
-                <label htmlFor="budget-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="budget-name" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
                   Name
                 </label>
                 <input
@@ -340,18 +365,18 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
                   onChange={(e) => setFormName(e.target.value)}
                   maxLength={BUDGET_NAME_MAX_LENGTH}
                   placeholder="e.g. Groceries"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm"
+                  className="ui-input"
                 />
               </div>
               <div>
-                <label htmlFor="budget-period" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="budget-period" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
                   Period
                 </label>
                 <select
                   id="budget-period"
                   value={formPeriodType}
                   onChange={(e) => setFormPeriodType(e.target.value as BudgetPeriodType)}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm"
+                  className="ui-select"
                 >
                   <option value="weekly">Weekly (Mon–Sun)</option>
                   <option value="biweekly">Biweekly (1–14, 15–end)</option>
@@ -359,7 +384,7 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
                 </select>
               </div>
               <div>
-                <label htmlFor="budget-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="budget-amount" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
                   Amount ($)
                 </label>
                 <input
@@ -370,7 +395,7 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
                   step="0.01"
                   value={formAmount}
                   onChange={(e) => setFormAmount(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm"
+                  className="ui-input"
                 />
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -380,11 +405,11 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
                   onChange={(e) => setFormCumulative(e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">Cumulative (carry over overspend to next period)</span>
+                <span className="text-sm" style={{ color: 'var(--text-primary)' }}>Cumulative (carry over overspend to next period)</span>
               </label>
               <div>
-                <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Categories (at least one)</span>
-                <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1 border border-gray-200 dark:border-gray-600 rounded-lg">
+                <span className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Categories (at least one)</span>
+                <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 ui-card-inner" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--border-softer)', borderRadius: 16 }}>
                   {expenseCategories.map((cat) => (
                     <label key={cat.id} className="inline-flex items-center gap-1.5 cursor-pointer">
                       <input
@@ -393,7 +418,7 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
                         onChange={() => toggleCategory(cat.id)}
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{cat.name}</span>
+                      <span className="text-sm" style={{ color: 'var(--text-primary)' }}>{cat.name}</span>
                     </label>
                   ))}
                 </div>
@@ -403,7 +428,8 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
               <button
                 type="button"
                 onClick={closeForm}
-                className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                className="ui-btn ui-btn-secondary"
+                style={{ flex: 1 }}
               >
                 Cancel
               </button>
@@ -411,7 +437,8 @@ export default function Budgets({ onBack, onError }: BudgetsProps) {
                 type="button"
                 onClick={() => void handleSaveBudget()}
                 disabled={saving}
-                className="flex-1 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                className="ui-btn ui-btn-primary"
+                style={{ flex: 1 }}
               >
                 {saving ? 'Saving…' : editingBudget ? 'Save' : 'Add'}
               </button>

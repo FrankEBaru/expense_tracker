@@ -255,7 +255,7 @@ export default function Insights({ onBack }: InsightsProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-gray-500 dark:text-gray-400">Loading insights…</p>
+        <p style={{ color: 'var(--text-secondary)' }}>Loading insights…</p>
       </div>
     )
   }
@@ -263,8 +263,10 @@ export default function Insights({ onBack }: InsightsProps) {
   if (error) {
     return (
       <div className="p-4">
-        <p className="text-red-600 dark:text-red-400 text-sm">Failed to load: {error}</p>
-        <button type="button" onClick={onBack} className="mt-2 text-sm text-blue-600 dark:text-blue-400">
+        <div className="ui-card p-4">
+          <p className="text-sm" style={{ color: 'var(--text-negative)' }}>Failed to load: {error}</p>
+        </div>
+        <button type="button" onClick={onBack} className="ui-btn ui-btn-ghost" style={{ marginTop: 10, minHeight: 36, padding: '8px 10px', textTransform: 'none', letterSpacing: 0 }}>
           ← Back to dashboard
         </button>
       </div>
@@ -286,23 +288,26 @@ export default function Insights({ onBack }: InsightsProps) {
         <button
           type="button"
           onClick={onBack}
-          className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+          className="ui-btn ui-btn-ghost"
+          style={{ minHeight: 36, padding: '8px 10px', textTransform: 'none', letterSpacing: 0 }}
         >
           ← Dashboard
         </button>
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Insights</h2>
+        <h2 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.01em', color: 'var(--text-primary)' }}>Insights</h2>
         <span className="w-16" />
       </div>
 
       {/* 1. Trend summary */}
-      <section className="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 p-3">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">This month vs last month</h3>
+      <section className="ui-card" style={{ padding: 'var(--space-card)' }}>
+        <h3 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 10 }}>
+          This month vs last month
+        </h3>
         <div className="grid grid-cols-3 gap-2 text-center text-sm">
           <div>
-            <p className="text-gray-500 dark:text-gray-400">Income</p>
-            <p className="font-medium text-green-700 dark:text-green-400">${formatCurrency(currentSummary.income)}</p>
+            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Income</p>
+            <p className="font-medium" style={{ color: 'var(--text-positive)', fontVariantNumeric: 'tabular-nums' }}>${formatCurrency(currentSummary.income)}</p>
             {prevMonth && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 {prevSummary.income === 0
                   ? '—'
                   : `${currentSummary.income >= prevSummary.income ? '+' : ''}${formatCurrency(currentSummary.income - prevSummary.income)} vs last`}
@@ -310,10 +315,10 @@ export default function Insights({ onBack }: InsightsProps) {
             )}
           </div>
           <div>
-            <p className="text-gray-500 dark:text-gray-400">Expenses</p>
-            <p className="font-medium text-red-700 dark:text-red-400">${formatCurrency(currentSummary.expenses)}</p>
+            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Expenses</p>
+            <p className="font-medium" style={{ color: 'var(--text-negative)', fontVariantNumeric: 'tabular-nums' }}>${formatCurrency(currentSummary.expenses)}</p>
             {prevMonth && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 {prevSummary.expenses === 0
                   ? '—'
                   : `${currentSummary.expenses >= prevSummary.expenses ? '+' : ''}${formatCurrency(currentSummary.expenses - prevSummary.expenses)} vs last`}
@@ -321,10 +326,10 @@ export default function Insights({ onBack }: InsightsProps) {
             )}
           </div>
           <div>
-            <p className="text-gray-500 dark:text-gray-400">Net</p>
-            <p className="font-medium text-gray-800 dark:text-gray-200">${formatCurrency(currentSummary.net)}</p>
+            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Net</p>
+            <p className="font-medium" style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>${formatCurrency(currentSummary.net)}</p>
             {prevMonth && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 {prevSummary.net === 0
                   ? '—'
                   : `${currentSummary.net >= prevSummary.net ? '+' : ''}${formatCurrency(currentSummary.net - prevSummary.net)} vs last`}
@@ -335,8 +340,10 @@ export default function Insights({ onBack }: InsightsProps) {
       </section>
 
       {/* 2. Income vs expenses by month */}
-      <section className="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 p-3">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Income vs expenses by month</h3>
+      <section className="ui-card" style={{ padding: 'var(--space-card)' }}>
+        <h3 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 10 }}>
+          Income vs expenses by month
+        </h3>
         <VerticalBarChart
           data={incomeVsExpenseByMonth}
           hasData={!incomeVsExpenseByMonth.every((m) => m.income === 0 && m.expenses === 0)}
@@ -417,14 +424,17 @@ export default function Insights({ onBack }: InsightsProps) {
       />
 
       {/* 5. Category share (one month) */}
-      <section className="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 p-3">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Expense share by category</h3>
+      <section className="ui-card" style={{ padding: 'var(--space-card)' }}>
+        <h3 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 10 }}>
+          Expense share by category
+        </h3>
         <div className="mb-2">
-          <label className="text-xs text-gray-500 dark:text-gray-400">Month </label>
+          <label className="text-xs" style={{ color: 'var(--text-secondary)' }}>Month </label>
           <select
             value={shareMonth}
             onChange={(e) => setShareMonth(e.target.value)}
-            className="ml-2 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-800 dark:text-gray-200"
+            className="ui-select"
+            style={{ display: 'inline-block', width: 'auto', marginLeft: 8, minHeight: 36, paddingTop: 6, paddingBottom: 6 }}
           >
             {months.map((m) => (
               <option key={m.ym} value={m.ym}>{m.label}</option>
@@ -432,19 +442,19 @@ export default function Insights({ onBack }: InsightsProps) {
           </select>
         </div>
         {categoryShareData.length === 0 ? (
-          <p className="text-xs text-gray-400 dark:text-gray-500">No data for this period.</p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>No data for this period.</p>
         ) : (
           <div className="space-y-1.5">
             {categoryShareData.map((item, idx) => (
               <div key={item.id} className="flex items-center gap-1.5 min-w-0">
-                <span className="w-20 shrink-0 text-xs text-gray-700 dark:text-gray-300 truncate" title={item.name}>{item.name}</span>
-                <div className="min-w-0 flex-1 h-4 bg-gray-100 dark:bg-gray-700 rounded overflow-hidden">
+                <span className="w-20 shrink-0 text-xs truncate" style={{ color: 'var(--text-primary)' }} title={item.name}>{item.name}</span>
+                <div className="min-w-0 flex-1 h-4 rounded overflow-hidden" style={{ background: 'rgba(17,17,17,0.08)' }}>
                   <div
                     className="h-full rounded"
                     style={{ width: `${item.share}%`, backgroundColor: getCategoryColor(item.id, expenseCategories, idx, EXPENSE_CATEGORY_PALETTE) }}
                   />
                 </div>
-                <span className="w-14 shrink-0 text-right text-xs text-gray-600 dark:text-gray-400">{item.share.toFixed(0)}%</span>
+                <span className="w-14 shrink-0 text-right text-xs" style={{ color: 'var(--text-secondary)' }}>{item.share.toFixed(0)}%</span>
               </div>
             ))}
           </div>
@@ -452,10 +462,12 @@ export default function Insights({ onBack }: InsightsProps) {
       </section>
 
       {/* 6a. Net worth over time – Trend */}
-      <section className="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 p-3">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Net worth over time – Trend</h3>
+      <section className="ui-card" style={{ padding: 'var(--space-card)' }}>
+        <h3 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 10 }}>
+          Net worth over time – Trend
+        </h3>
         {netWorthByMonth.every((m) => m.netWorth === 0) ? (
-          <p className="text-xs text-gray-400 dark:text-gray-500">No data for this period.</p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>No data for this period.</p>
         ) : (
           <div className="min-w-0 w-full" style={{ marginTop: CHART.section.chartMarginTop }}>
             <NetWorthLineChart data={netWorthByMonth} />
@@ -464,8 +476,10 @@ export default function Insights({ onBack }: InsightsProps) {
       </section>
 
       {/* 6b. Net worth over time – By month */}
-      <section className="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 p-3">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Net worth over time – By month</h3>
+      <section className="ui-card" style={{ padding: 'var(--space-card)' }}>
+        <h3 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 10 }}>
+          Net worth over time – By month
+        </h3>
         <VerticalBarChart
           data={netWorthByMonth}
           hasData={!netWorthByMonth.every((m) => m.netWorth === 0)}
@@ -585,11 +599,12 @@ function CategoryControlRow({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2 mb-2">
-      <span className="text-xs text-gray-500 dark:text-gray-400">Show:</span>
+      <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Show:</span>
       <select
         value={topN}
         onChange={(e) => setTopN(Number(e.target.value))}
-        className="min-h-[44px] px-2 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-800 dark:text-gray-200"
+        className="ui-select"
+        style={{ width: 'auto', minHeight: 40, paddingTop: 8, paddingBottom: 8, fontSize: 12 }}
       >
         <option value={5}>Top 5</option>
         <option value={10}>Top 10</option>
@@ -600,14 +615,15 @@ function CategoryControlRow({
         <button
           type="button"
           onClick={() => setOpenDropdown((o: boolean) => !o)}
-          className="min-h-[44px] px-2 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-xs text-gray-700 dark:text-gray-200"
+          className="ui-btn ui-btn-secondary"
+          style={{ minHeight: 40, padding: '8px 10px', textTransform: 'none', letterSpacing: 0 }}
         >
           {selectedIds.length === 0 ? 'Select categories' : `${selectedIds.length} selected`} ▼
         </button>
         {openDropdown && (
-          <div className="absolute left-0 top-full mt-1 z-20 w-48 max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800 py-1">
+          <div className="absolute left-0 top-full mt-1 z-20 w-56 max-h-56 overflow-y-auto ui-card" style={{ padding: 6 }}>
             {categories.map((c) => (
-              <label key={c.id} className="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+              <label key={c.id} className="flex items-center gap-2 px-2 py-2 cursor-pointer ui-card-inner" style={{ borderRadius: 14 }}>
                 <input
                   type="checkbox"
                   checked={selectedIds.includes(c.id)}
@@ -620,7 +636,7 @@ function CategoryControlRow({
                   }}
                   className="rounded"
                 />
-                <span className="text-xs truncate">{c.name}</span>
+                <span className="text-xs truncate" style={{ color: 'var(--text-primary)' }}>{c.name}</span>
               </label>
             ))}
           </div>
@@ -632,7 +648,7 @@ function CategoryControlRow({
 
 function CategoryOverTimeSection({
   title,
-  months: _months,
+  months,
   trendData,
   byMonthData,
   trendTopN,
@@ -663,6 +679,7 @@ function CategoryOverTimeSection({
   palette: ColorPalette
   emptyMessage: string
 }) {
+  void months
   const trendCategoryIds = useMemo(() => {
     const ids = new Set<string>()
     trendData.forEach((m) => m.series.forEach((s) => ids.add(s.id)))
@@ -703,8 +720,10 @@ function CategoryOverTimeSection({
   return (
     <>
       {/* Section 1: Trend (time series) – own controls */}
-      <section className="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 p-3">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{title} – Trend</h3>
+      <section className="ui-card" style={{ padding: 'var(--space-card)' }}>
+        <h3 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 10 }}>
+          {title} – Trend
+        </h3>
         <CategoryControlRow
           topN={trendTopN}
           setTopN={setTrendTopN}
@@ -716,7 +735,7 @@ function CategoryOverTimeSection({
           setOpenDropdown={setTrendDropdownOpen}
         />
         {!hasTrendData ? (
-          <p className="text-xs text-gray-400 dark:text-gray-500">{emptyMessage}</p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{emptyMessage}</p>
         ) : (
           <div className="min-w-0 w-full" style={{ marginTop: CHART.section.chartMarginTop }}>
             <CategoryOverTimeLineChart
@@ -731,8 +750,10 @@ function CategoryOverTimeSection({
       </section>
 
       {/* Section 2: By month (stacked bars) – own controls */}
-      <section className="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 p-3">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{title} – By month</h3>
+      <section className="ui-card" style={{ padding: 'var(--space-card)' }}>
+        <h3 style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 10 }}>
+          {title} – By month
+        </h3>
         <CategoryControlRow
           topN={byMonthTopN}
           setTopN={setByMonthTopN}
