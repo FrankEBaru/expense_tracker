@@ -8,7 +8,7 @@ import type { Account } from '../types/account'
 import type { Category } from '../types/category'
 import { logInternalError, toUserErrorMessage } from '../utils/errors'
 import { isHexColor, isUuid } from '../utils/validation'
-import { IconBank, IconMoon, IconSun, IconTag, IconWallet } from './ui/icons'
+import { IconMoon, IconSun, IconTag, IconWallet } from './ui/icons'
 
 interface SettingsProps {
   onBack: () => void
@@ -388,22 +388,27 @@ export default function Settings({ onBack: _onBack, onError, dark, onToggleTheme
                     }}
                     aria-hidden
                   >
-                    {idx === 0 ? <IconBank size={18} strokeWidth={1.8} /> : <IconWallet size={18} strokeWidth={1.8} />}
+                    <IconWallet size={18} strokeWidth={1.8} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                    <div className="truncate" style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
                       {acc.name}
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <button
-                      type="button"
-                      className="ui-switch"
-                      role="switch"
-                      aria-checked={!!acc.hide_balance}
-                      aria-label={`Hide balance for ${acc.name}`}
-                      onClick={() => void handleToggleHideBalance(acc)}
-                    />
+                    <div className="flex items-center gap-2 shrink-0" style={{ color: 'var(--text-secondary)' }}>
+                      <span className="text-xs font-semibold whitespace-nowrap" title="When on, this account’s balance is hidden in the app">
+                        Hide balance
+                      </span>
+                      <button
+                        type="button"
+                        className="ui-switch"
+                        role="switch"
+                        aria-checked={!!acc.hide_balance}
+                        aria-label={`Hide balance for ${acc.name}`}
+                        onClick={() => void handleToggleHideBalance(acc)}
+                      />
+                    </div>
                     <div className="relative shrink-0" ref={openAccountMenuId === acc.id ? accountMenuRef : undefined}>
                       <button
                         type="button"

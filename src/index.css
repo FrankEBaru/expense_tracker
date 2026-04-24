@@ -266,8 +266,8 @@
     height: 28px;
     border-radius: 9999px;
     padding: 0;
-    border: 1px solid var(--border-soft);
-    background: var(--color-bg-secondary);
+    border: 1px solid rgba(17, 17, 17, 0.22);
+    background: rgba(17, 17, 17, 0.12);
     position: relative;
     flex: 0 0 auto;
   }
@@ -280,20 +280,24 @@
     width: 22px;
     height: 22px;
     border-radius: 9999px;
-    background: var(--color-bg-card);
-    border: 1px solid var(--border-softer);
+    background: #ffffff;
+    border: 1px solid rgba(17, 17, 17, 0.14);
     transform: translate(0, -50%);
     transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
-    box-shadow: 0 6px 16px rgba(17, 17, 17, 0.12);
+    box-shadow: 0 4px 12px rgba(17, 17, 17, 0.18);
   }
 
   .ui-switch[aria-checked='true'] {
-    background: rgba(61, 171, 106, 0.22);
-    border-color: rgba(61, 171, 106, 0.35);
+    background: var(--color-green);
+    border-color: rgba(35, 110, 72, 0.95);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
   }
 
   .ui-switch[aria-checked='true']::after {
     transform: translate(18px, -50%);
+    background: #ffffff;
+    border-color: rgba(35, 110, 72, 0.35);
+    box-shadow: 0 4px 12px rgba(17, 17, 17, 0.2);
   }
 
   .ui-switch:active::after {
@@ -305,19 +309,25 @@
   }
 
   .dark .ui-switch {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: var(--border-soft);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.22);
   }
 
   .dark .ui-switch::after {
-    background: rgba(12, 29, 25, 0.92);
-    border-color: rgba(255, 255, 255, 0.12);
-    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
+    background: rgba(245, 245, 245, 0.96);
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
   }
 
   .dark .ui-switch[aria-checked='true'] {
-    background: rgba(61, 171, 106, 0.18);
-    border-color: rgba(61, 171, 106, 0.28);
+    background: var(--color-green);
+    border-color: rgba(180, 255, 220, 0.35);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+
+  .dark .ui-switch[aria-checked='true']::after {
+    background: #ffffff;
+    border-color: rgba(35, 110, 72, 0.45);
   }
 
   .ui-input::placeholder {
