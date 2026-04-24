@@ -13,7 +13,7 @@ import CategoryFilterDropdown from './CategoryFilterDropdown'
 import { formatCurrency } from '../utils/format'
 import { getAccountColor } from '../constants/colors'
 import { logInternalError, toUserErrorMessage } from '../utils/errors'
-import { IconChevronLeft, IconChevronRight } from './ui/icons'
+import { IconChevronLeft, IconChevronRight, IconWallet } from './ui/icons'
 
 export type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc' | 'category'
 
@@ -266,13 +266,24 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
                         gap: 10,
                       }}
                     >
-                      <span className="flex items-center gap-2 min-w-0">
+                      <span className="flex items-center gap-3 min-w-0">
                         <span
-                          className="w-2.5 h-2.5 rounded-full shrink-0"
-                          style={{ backgroundColor: getAccountColor(acc, idx) }}
+                          className="shrink-0 inline-flex items-center justify-center"
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 12,
+                            background: getAccountColor(acc, idx),
+                            color: '#ffffff',
+                            border: '1px solid rgba(255, 255, 255, 0.22)',
+                          }}
                           aria-hidden
-                        />
-                        <span className="truncate">{acc.name}</span>
+                        >
+                          <IconWallet size={16} strokeWidth={1.8} />
+                        </span>
+                        <span className="truncate" style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                          {acc.name}
+                        </span>
                       </span>
                       <span className="shrink-0" style={{ fontVariantNumeric: 'tabular-nums' }}>{balanceStr}</span>
                     </button>

@@ -173,17 +173,12 @@ export default function Budgets({ onBack: _onBack, onError }: BudgetsProps) {
   return (
     <div className="space-y-4">
       {!loading && budgets.length > 0 && (
-        <div className="flex items-center justify-between gap-3">
-          <h2 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)' }}>Budgets</h2>
+        <div className="flex justify-end">
           <button type="button" onClick={openAddForm} className="ui-btn ui-btn-primary" style={{ minHeight: 40, textTransform: 'none', letterSpacing: 0 }}>
             Add budget
           </button>
         </div>
       )}
-
-      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-        Showing status for the current period. Weekly resets Monday–Sunday; biweekly uses 1–14 and 15–end of month.
-      </p>
 
       {loading ? (
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Loading…</p>
