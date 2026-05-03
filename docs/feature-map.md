@@ -3,9 +3,9 @@
 ## Core Features
 
 1. **Authentication** — Email/password sign up and login via Supabase Auth.
-2. **Account Management** — Multiple named accounts with initial balances, optional color, hide-balance toggle.
+2. **Account Management** — Multiple named accounts with initial balances, optional color, hide-balance toggle; each account is **cash/bank** or **credit card**. Account type is chosen when the account is created and cannot be changed afterward (edit updates name, initial balance, and color only).
 3. **Category Management** — Separate expense and income categories with custom colors and sort order.
-4. **Transaction Tracking** — Add/edit/delete expense, income, and transfer transactions with date, amount, category, account, and description.
+4. **Transaction Tracking** — Add/edit/delete expense, income, and transfer transactions with date, amount, category, account, and description. **Credit card payments** are recorded as **transfers** from a cash/bank account to the card. **Installments** on a credit-card expense create multiple future-dated expense rows (optional extra cost split across months).
 5. **Budget Management** — Named budgets with weekly, biweekly, or monthly periods; optional cumulative carry-over; linked to multiple categories.
 6. **Dashboard** — Month navigator, account balances, mini budget summary, income/expense/net totals, category bar charts, filtered transaction list.
 7. **Insights / Analytics** — 12-month income vs expenses, per-category trends, expense share breakdown, net worth over time.
@@ -20,9 +20,10 @@
 - `src/App.tsx` (session management via `supabase.auth.getSession` + `onAuthStateChange`)
 
 ### Account Management
-- `src/components/Settings.tsx` (account CRUD UI)
+- `src/components/Settings.tsx` (account CRUD UI, account type at create, read-only type on edit)
 - `src/hooks/useAccounts.ts` (fetch, CRUD, balance computation, first-login defaults)
-- `src/types/account.ts`
+- `src/types/account.ts` (`AccountType`, `resolveAccountType`)
+- `src/utils/accountBalances.ts` (shared ledger balance math)
 - `src/constants/colors.ts` (`ACCOUNT_PALETTE`, `getAccountColor`)
 
 ### Category Management
@@ -32,9 +33,10 @@
 - `src/constants/colors.ts` (`EXPENSE_CATEGORY_PALETTE`, `INCOME_CATEGORY_PALETTE`, `getCategoryColor`)
 
 ### Transaction Tracking
-- `src/components/TransactionForm.tsx` (add/edit modal)
-- `src/components/TransactionList.tsx` (list + delete/edit menu)
-- `src/hooks/useTransactions.ts` (fetch by month + account, CRUD)
+- `src/components/TransactionForm.tsx` (add/edit modal; installments + transfer hint for cards)
+- `src/utils/installments.ts` (month-shift dates, cent-safe installment split)
+- `src/components/TransactionList.tsx` (list + delete/edit menu; installment badge; delete prompts for installment groups)
+- `src/hooks/useTransactions.ts` (fetch by month + account, CRUD, batch insert)
 - `src/hooks/useTransactionsRange.ts` (fetch by date range)
 - `src/types/transaction.ts`
 - `src/utils/format.ts` (`formatCurrency`)

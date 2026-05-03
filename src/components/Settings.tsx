@@ -4,11 +4,12 @@ import { useAccounts } from '../hooks/useAccounts'
 import { useCategories } from '../hooks/useCategories'
 import { ACCOUNT_PALETTE, EXPENSE_CATEGORY_PALETTE, INCOME_CATEGORY_PALETTE, getAccountColor } from '../constants/colors'
 import { ACCOUNT_NAME_MAX_LENGTH, CATEGORY_NAME_MAX_LENGTH, MAX_MONEY_AMOUNT } from '../constants/limits'
-import type { Account } from '../types/account'
+import type { Account, AccountType } from '../types/account'
+import { resolveAccountType, accountSelectLabel } from '../types/account'
 import type { Category } from '../types/category'
 import { logInternalError, toUserErrorMessage } from '../utils/errors'
 import { isHexColor, isUuid } from '../utils/validation'
-import { IconMoon, IconSun, IconTag, IconWallet } from './ui/icons'
+import { IconBank, IconCreditCard, IconMoon, IconSun, IconTag } from './ui/icons'
 
 interface SettingsProps {
   onBack: () => void
@@ -57,6 +58,7 @@ export default function Settings({ onBack: _onBack, onError, dark, onToggleTheme
   const [accountForm, setAccountForm] = useState<Account | null | 'new'>(null)
   const [accountName, setAccountName] = useState('')
   const [accountInitialBalance, setAccountInitialBalance] = useState('0')
+  const [accountType, setAccountType] = useState<AccountType>('cash')
   const [accountColor, setAccountColor] = useState<string | null>(null)
   const [addingCategoryType, setAddingCategoryType] = useState<'expense' | 'income' | null>(null)
   const [newCategoryName, setNewCategoryName] = useState('')
@@ -97,6 +99,7 @@ export default function Settings({ onBack: _onBack, onError, dark, onToggleTheme
     setAccountForm('new')
     setAccountName('')
     setAccountInitialBalance('0')
+    setAccountType('cash')
     setAccountColor(null)
     setError(null)
   }
@@ -105,6 +108,7 @@ export default function Settings({ onBack: _onBack, onError, dark, onToggleTheme
     setAccountForm(acc)
     setAccountName(acc.name)
     setAccountInitialBalance(String(acc.initial_balance))
+    setAccountType(resolveAccountType(acc))
     setAccountColor(acc.color ?? null)
     setError(null)
   }
@@ -185,6 +189,7 @@ export default function Settings({ onBack: _onBack, onError, dark, onToggleTheme
         await addAccount({
           name: trimmedName,
           initial_balance: num,
+          account_type: accountType,
           color: accountColor || undefined,
         })
       } else if (accountForm) {
@@ -370,7 +375,9 @@ export default function Settings({ onBack: _onBack, onError, dark, onToggleTheme
         ) : (
           <>
             <ul className="space-y-2 mb-3">
-              {accounts.map((acc, idx) => (
+              {accounts.map((acc, idx) => {
+                const AccountRowIcon = resolveAccountType(acc) === 'credit_card' ? IconCreditCard : IconBank
+                return (
                 <li
                   key={acc.id}
                   className="ui-card"
@@ -388,11 +395,11 @@ export default function Settings({ onBack: _onBack, onError, dark, onToggleTheme
                     }}
                     aria-hidden
                   >
-                    <IconWallet size={18} strokeWidth={1.8} />
+                    <AccountRowIcon size={18} strokeWidth={1.8} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="truncate" style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
-                      {acc.name}
+                      {accountSelectLabel(acc)}
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
@@ -449,7 +456,8 @@ export default function Settings({ onBack: _onBack, onError, dark, onToggleTheme
                     </div>
                   </div>
                 </li>
-              ))}
+                )
+              })}
             </ul>
             <button
               type="button"
@@ -654,6 +662,36 @@ export default function Settings({ onBack: _onBack, onError, dark, onToggleTheme
                 placeholder="e.g. Checking"
               />
             </div>
+            {accountForm === 'new' ? (
+              <div>
+                <label htmlFor="settings-account-type" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+                  Account type
+                </label>
+                <select
+                  id="settings-account-type"
+                  value={accountType}
+                  onChange={(e) => setAccountType(e.target.value as AccountType)}
+                  className="ui-select"
+                >
+                  <option value="cash">Cash / bank / debit</option>
+                  <option value="credit_card">Credit card</option>
+                </select>
+              </div>
+            ) : (
+              accountForm && (
+                <div>
+                  <span className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    Account type
+                  </span>
+                  <p className="text-sm" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                    {resolveAccountType(accountForm) === 'credit_card' ? 'Credit card' : 'Cash / bank / debit'}
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                    Type is set when the account is created and cannot be changed later.
+                  </p>
+                </div>
+              )
+            )}
             <div>
               <label htmlFor="settings-account-initial" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
                 Initial balance
@@ -668,6 +706,12 @@ export default function Settings({ onBack: _onBack, onError, dark, onToggleTheme
                 onChange={(e) => setAccountInitialBalance(e.target.value)}
                 className="ui-input"
               />
+              {(accountForm === 'new' && accountType === 'credit_card') ||
+              (accountForm !== 'new' && accountForm && resolveAccountType(accountForm) === 'credit_card') ? (
+                <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                  Use a negative number if you already owe a balance on the card when you start tracking.
+                </p>
+              ) : null}
             </div>
             <div>
               <span className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
