@@ -9,7 +9,7 @@ import { VerticalBarChart } from './VerticalBarChart'
 import { TrendLineChart } from './TrendLineChart'
 import type { Transaction } from '../types/transaction'
 import type { Category } from '../types/category'
-import type { Account } from '../types/account'
+import { computeBalanceMapUpToDate } from '../utils/accountBalances'
 
 function getMonthsBack(count: number): { ym: string; label: string; startDate: string; endDate: string }[] {
   const out: { ym: string; label: string; startDate: string; endDate: string }[] = []
@@ -58,31 +58,6 @@ function sumByCategory(
     .map((c) => ({ id: c.id, name: c.name, total: map.get(c.id) ?? 0 }))
     .filter((r) => r.total > 0)
     .sort((a, b) => b.total - a.total)
-}
-
-function computeBalanceAtDate(
-  accounts: Account[],
-  transactions: Transaction[],
-  upToDate: string
-): Map<string, number> {
-  const byAccount = new Map<string, number>()
-  for (const acc of accounts) {
-    byAccount.set(acc.id, Number(acc.initial_balance))
-  }
-  for (const tx of transactions) {
-    if (tx.date > upToDate) continue
-    if (tx.type === 'income' && tx.account_id) {
-      byAccount.set(tx.account_id, (byAccount.get(tx.account_id) ?? 0) + Number(tx.amount))
-    }
-    if (tx.type === 'expense' && tx.account_id) {
-      byAccount.set(tx.account_id, (byAccount.get(tx.account_id) ?? 0) - Number(tx.amount))
-    }
-    if (tx.type === 'transfer') {
-      if (tx.from_account_id) byAccount.set(tx.from_account_id, (byAccount.get(tx.from_account_id) ?? 0) - Number(tx.amount))
-      if (tx.to_account_id) byAccount.set(tx.to_account_id, (byAccount.get(tx.to_account_id) ?? 0) + Number(tx.amount))
-    }
-  }
-  return byAccount
 }
 
 interface InsightsProps {
@@ -246,7 +221,7 @@ export default function Insights({ onBack }: InsightsProps) {
 
   const netWorthByMonth = useMemo(() => {
     return months.map((m) => {
-      const balances = computeBalanceAtDate(accounts, transactions, m.endDate)
+      const balances = computeBalanceMapUpToDate(accounts, transactions, m.endDate)
       const total = [...balances.values()].reduce((a, b) => a + b, 0)
       return { ...m, netWorth: total }
     })

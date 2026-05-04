@@ -3,24 +3,7 @@ import { supabase } from '../lib/supabase'
 import type { Account, AccountInsert, AccountUpdate, AccountWithBalance } from '../types/account'
 import type { Transaction } from '../types/transaction'
 import { logInternalError, toUserErrorMessage } from '../utils/errors'
-
-function computeBalances(
-  accounts: Account[],
-  transactions: Transaction[]
-): AccountWithBalance[] {
-  return accounts.map((acc) => {
-    let balance = Number(acc.initial_balance)
-    for (const t of transactions) {
-      if (t.type === 'income' && t.account_id === acc.id) balance += Number(t.amount)
-      if (t.type === 'expense' && t.account_id === acc.id) balance -= Number(t.amount)
-      if (t.type === 'transfer') {
-        if (t.to_account_id === acc.id) balance += Number(t.amount)
-        if (t.from_account_id === acc.id) balance -= Number(t.amount)
-      }
-    }
-    return { ...acc, balance }
-  })
-}
+import { computeBalancesFromTransactions } from '../utils/accountBalances'
 
 const DEFAULT_EXPENSE_CATEGORIES = ['Food', 'Transport', 'Bills', 'Shopping', 'Other']
 const DEFAULT_INCOME_CATEGORIES = ['Salary', 'Freelance', 'Other']
@@ -56,6 +39,7 @@ export function useAccounts() {
       const { error: insErr } = await supabase.from('accounts').insert({
         name: 'Default',
         initial_balance: 0,
+        account_type: 'cash',
       })
       if (insErr) {
         logInternalError('useAccounts.fetchAccounts.insertDefaultAccount', insErr)
@@ -73,7 +57,9 @@ export function useAccounts() {
     }
     const { data: txData, error: e2 } = await supabase
       .from('transactions')
-      .select('id, type, account_id, from_account_id, to_account_id, amount')
+      .select(
+        'id, type, account_id, from_account_id, to_account_id, amount, date, installment_group_id, installment_index, installment_count, installment_extra_cost'
+      )
     if (e2) {
       logInternalError('useAccounts.fetchAccounts.transactions', e2)
       setError(toUserErrorMessage(e2, 'Could not load account balances.'))
@@ -82,7 +68,7 @@ export function useAccounts() {
       return
     }
     const transactions = (txData as Transaction[]) ?? []
-    setAccounts(computeBalances(accountsList, transactions))
+    setAccounts(computeBalancesFromTransactions(accountsList, transactions))
     if (!quiet) setLoading(false)
   }, [])
 
