@@ -136,6 +136,28 @@ export function IconWallet(props: IconProps) {
   )
 }
 
+/** Rectangular card shape — visually distinct from wallet/bank for credit accounts. */
+export function IconCreditCard(props: IconProps) {
+  const p = baseProps(props)
+  return (
+    <svg {...p}>
+      <rect
+        x="2.2"
+        y="4.2"
+        width="11.6"
+        height="7.6"
+        rx="1.2"
+        stroke="currentColor"
+        strokeWidth={p.strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M2.2 7.2h11.6" stroke="currentColor" strokeWidth={p.strokeWidth} strokeLinecap="round" />
+      <path d="M5.4 10.2h2.4" stroke="currentColor" strokeWidth={p.strokeWidth} strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function IconTag(props: IconProps) {
   const p = baseProps(props)
   return (
