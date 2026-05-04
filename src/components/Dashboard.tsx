@@ -5,6 +5,7 @@ import { useBudgets } from '../hooks/useBudgets'
 import { useBudgetPeriodTransactions } from '../hooks/useBudgetPeriodTransactions'
 import { computeBudgetStatus } from '../utils/budgetPeriods'
 import type { AccountWithBalance } from '../types/account'
+import { resolveAccountType, accountSelectLabel } from '../types/account'
 import type { Transaction } from '../types/transaction'
 import type { Category } from '../types/category'
 import TransactionList from './TransactionList'
@@ -13,7 +14,7 @@ import CategoryFilterDropdown from './CategoryFilterDropdown'
 import { formatCurrency } from '../utils/format'
 import { getAccountColor } from '../constants/colors'
 import { logInternalError, toUserErrorMessage } from '../utils/errors'
-import { IconChevronLeft, IconChevronRight, IconWallet } from './ui/icons'
+import { IconBank, IconChevronLeft, IconChevronRight, IconCreditCard } from './ui/icons'
 
 export type SortOption = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc' | 'category'
 
@@ -245,6 +246,7 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
               {accounts.map((acc, idx) => {
                 const balance = (acc as AccountWithBalance).balance
                 const balanceStr = acc.hide_balance ? '•••' : `$${formatCurrency(balance)}`
+                const AccountIcon = resolveAccountType(acc) === 'credit_card' ? IconCreditCard : IconBank
                 return (
                   <li key={acc.id}>
                     <button
@@ -279,10 +281,10 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
                           }}
                           aria-hidden
                         >
-                          <IconWallet size={16} strokeWidth={1.8} />
+                          <AccountIcon size={16} strokeWidth={1.8} />
                         </span>
                         <span className="truncate" style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
-                          {acc.name}
+                          {accountSelectLabel(acc)}
                         </span>
                       </span>
                       <span className="shrink-0" style={{ fontVariantNumeric: 'tabular-nums' }}>{balanceStr}</span>
