@@ -2,8 +2,14 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Transaction, TransactionInsert, TransactionType } from '../types/transaction'
 import type { Account } from '../types/account'
+import { resolveAccountType, accountSelectLabel } from '../types/account'
 import type { Category } from '../types/category'
-import { MAX_MONEY_AMOUNT, TRANSACTION_DESCRIPTION_MAX_LENGTH } from '../constants/limits'
+import {
+  MAX_MONEY_AMOUNT,
+  MAX_INSTALLMENT_MONTHS,
+  TRANSACTION_DESCRIPTION_MAX_LENGTH,
+} from '../constants/limits'
+import { addMonthsToDateStr, splitInstallmentAmounts } from '../utils/installments'
 import { logInternalError, toUserErrorMessage } from '../utils/errors'
 
 interface TransactionFormProps {
@@ -15,6 +21,7 @@ interface TransactionFormProps {
   onSaved: () => void
   onError?: (message: string) => void
   addTransaction: (insert: TransactionInsert) => Promise<void>
+  addTransactions: (inserts: TransactionInsert[]) => Promise<void>
   updateTransaction: (
     id: string,
     update: {
@@ -38,6 +45,7 @@ export default function TransactionForm({
   onSaved,
   onError,
   addTransaction,
+  addTransactions,
   updateTransaction,
 }: TransactionFormProps) {
   const isEdit = !!transaction
@@ -49,10 +57,20 @@ export default function TransactionForm({
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [description, setDescription] = useState('')
+  const [installmentMonths, setInstallmentMonths] = useState('1')
+  const [installmentExtraCost, setInstallmentExtraCost] = useState('0')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const categories = type === 'expense' ? expenseCategories : incomeCategories
+  const selectedExpenseAccount = accounts.find((a) => a.id === accountId)
+  const showInstallments =
+    !isEdit && type === 'expense' && resolveAccountType(selectedExpenseAccount) === 'credit_card'
+  const fromAcc = accounts.find((a) => a.id === fromAccountId)
+  const toAcc = accounts.find((a) => a.id === toAccountId)
+  const transferTouchesCreditCard =
+    type === 'transfer' &&
+    (resolveAccountType(fromAcc) === 'credit_card' || resolveAccountType(toAcc) === 'credit_card')
 
   useEffect(() => {
     if (isEdit) return
@@ -92,6 +110,8 @@ export default function TransactionForm({
       setAmount('')
       setDate(new Date().toISOString().slice(0, 10))
       setDescription('')
+      setInstallmentMonths('1')
+      setInstallmentExtraCost('0')
     }
   }, [transaction, accounts, expenseCategories])
 
@@ -115,6 +135,8 @@ export default function TransactionForm({
       setSaving(false)
       return
     }
+    let months = 1
+    let extraCost = 0
     if (type === 'transfer') {
       if (!fromAccountId || !toAccountId) {
         setError('Select from and to accounts')
@@ -131,6 +153,25 @@ export default function TransactionForm({
         setError('Select account and category')
         setSaving(false)
         return
+      }
+      if (showInstallments) {
+        months = Math.floor(Number.parseInt(installmentMonths, 10))
+        extraCost = Number.parseFloat(installmentExtraCost)
+        if (!Number.isFinite(months) || months < 1 || months > MAX_INSTALLMENT_MONTHS) {
+          setError(`Installment months must be between 1 and ${MAX_INSTALLMENT_MONTHS}`)
+          setSaving(false)
+          return
+        }
+        if (!Number.isFinite(extraCost) || extraCost < 0) {
+          setError('Extra cost / commission must be zero or positive')
+          setSaving(false)
+          return
+        }
+        if (num + extraCost > MAX_MONEY_AMOUNT) {
+          setError('Total financed amount is too large')
+          setSaving(false)
+          return
+        }
       }
     }
     try {
@@ -165,6 +206,32 @@ export default function TransactionForm({
             from_account_id: fromAccountId,
             to_account_id: toAccountId,
             amount: num,
+            date,
+            description: description || null,
+          })
+        } else if (showInstallments && months > 1) {
+          const groupId = crypto.randomUUID()
+          const amounts = splitInstallmentAmounts(num, extraCost, months)
+          const descBase = (description || '').trim() || 'Purchase'
+          const rows: TransactionInsert[] = amounts.map((amt, i) => ({
+            type: 'expense',
+            account_id: accountId,
+            category_id: categoryId,
+            amount: amt,
+            date: addMonthsToDateStr(date, i),
+            description: `${descBase} (${i + 1}/${months})`,
+            installment_group_id: groupId,
+            installment_index: i + 1,
+            installment_count: months,
+            installment_extra_cost: extraCost,
+          }))
+          await addTransactions(rows)
+        } else if (showInstallments && months === 1 && extraCost > 0) {
+          await addTransaction({
+            type: 'expense',
+            account_id: accountId,
+            category_id: categoryId,
+            amount: num + extraCost,
             date,
             description: description || null,
           })
@@ -273,7 +340,7 @@ export default function TransactionForm({
                 >
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
-                      {a.name}
+                      {accountSelectLabel(a)}
                     </option>
                   ))}
                 </select>
@@ -291,11 +358,16 @@ export default function TransactionForm({
                 >
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
-                      {a.name}
+                      {accountSelectLabel(a)}
                     </option>
                   ))}
                 </select>
               </div>
+              {transferTouchesCreditCard && (
+                <p className="text-xs" style={{ color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                  Use a transfer to record a credit card payment from your bank or cash account to this card.
+                </p>
+              )}
             </>
           ) : (
             <>
@@ -312,7 +384,7 @@ export default function TransactionForm({
                 >
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
-                      {a.name}
+                      {accountSelectLabel(a)}
                     </option>
                   ))}
                 </select>
@@ -338,9 +410,52 @@ export default function TransactionForm({
             </>
           )}
 
+          {showInstallments && (
+            <div className="space-y-3 rounded-xl p-3" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--border-softer)' }}>
+              <p className="text-xs font-bold" style={{ color: 'var(--text-secondary)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                Installments (optional)
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)', lineHeight: 1.45 }}>
+                Creates one expense per month starting this month. Total financed = purchase amount + extra below, split evenly (last month absorbs cents).
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="installmentMonths" className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    Months
+                  </label>
+                  <input
+                    id="installmentMonths"
+                    type="number"
+                    min={1}
+                    max={MAX_INSTALLMENT_MONTHS}
+                    step={1}
+                    value={installmentMonths}
+                    onChange={(e) => setInstallmentMonths(e.target.value)}
+                    className="ui-input"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="installmentExtra" className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    Extra (interest/fees)
+                  </label>
+                  <input
+                    id="installmentExtra"
+                    type="number"
+                    step="0.01"
+                    min={0}
+                    max={MAX_MONEY_AMOUNT}
+                    value={installmentExtraCost}
+                    onChange={(e) => setInstallmentExtraCost(e.target.value)}
+                    className="ui-input"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           <div>
             <label htmlFor="amount" className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
-              Amount
+              {showInstallments ? 'Purchase amount' : 'Amount'}
             </label>
             <input
               id="amount"

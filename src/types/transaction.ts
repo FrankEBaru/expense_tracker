@@ -12,6 +12,10 @@ export interface Transaction {
   date: string
   description: string | null
   created_at: string
+  installment_group_id?: string | null
+  installment_index?: number | null
+  installment_count?: number | null
+  installment_extra_cost?: number | null
 }
 
 export interface TransactionWithDetails extends Transaction {
@@ -30,6 +34,10 @@ export interface TransactionInsert {
   amount: number
   date: string
   description?: string | null
+  installment_group_id?: string | null
+  installment_index?: number | null
+  installment_count?: number | null
+  installment_extra_cost?: number | null
 }
 
 export interface TransactionUpdate {
@@ -40,4 +48,8 @@ export interface TransactionUpdate {
   amount?: number
   date?: string
   description?: string | null
+  installment_group_id?: string | null
+  installment_index?: number | null
+  installment_count?: number | null
+  installment_extra_cost?: number | null
 }

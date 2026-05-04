@@ -66,6 +66,16 @@ export function useTransactions(selectedMonth: string, accountId: string | null 
     [fetchTransactions]
   )
 
+  const addTransactions = useCallback(
+    async (inserts: TransactionInsert[]) => {
+      if (inserts.length === 0) return
+      const { error: e } = await supabase.from('transactions').insert(inserts)
+      if (e) throw e
+      await fetchTransactions()
+    },
+    [fetchTransactions]
+  )
+
   const updateTransaction = useCallback(
     async (id: string, update: TransactionUpdate) => {
       const { error: e } = await supabase.from('transactions').update(update).eq('id', id)
@@ -84,13 +94,30 @@ export function useTransactions(selectedMonth: string, accountId: string | null 
     [fetchTransactions]
   )
 
+  const deleteTransactionsByInstallmentGroup = useCallback(
+    async (installmentGroupId: string) => {
+      if (!isUuid(installmentGroupId)) {
+        throw new Error('Invalid installment group.')
+      }
+      const { error: e } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('installment_group_id', installmentGroupId)
+      if (e) throw e
+      await fetchTransactions()
+    },
+    [fetchTransactions]
+  )
+
   return {
     transactions,
     loading,
     error,
     addTransaction,
+    addTransactions,
     updateTransaction,
     deleteTransaction,
+    deleteTransactionsByInstallmentGroup,
     refetch: fetchTransactions,
   }
 }

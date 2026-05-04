@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import type { Transaction } from '../types/transaction'
 import type { Account } from '../types/account'
+import { accountSelectLabel } from '../types/account'
 import type { Category } from '../types/category'
 import { formatCurrency } from '../utils/format'
 import {
@@ -18,7 +19,7 @@ interface TransactionListProps {
   loading: boolean
   error: string | null
   onEdit: (tx: Transaction) => void
-  onDelete: (id: string) => void
+  onRequestDelete: (tx: Transaction) => void
 }
 
 function formatDate(dateStr: string) {
@@ -30,9 +31,10 @@ function formatDate(dateStr: string) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function getAccountName(accounts: Account[], id: string | null): string {
+function getAccountLabel(accounts: Account[], id: string | null): string {
   if (!id) return ''
-  return accounts.find((a) => a.id === id)?.name ?? ''
+  const acc = accounts.find((a) => a.id === id)
+  return acc ? accountSelectLabel(acc) : ''
 }
 
 function getCategoryName(expense: Category[], income: Category[], type: string, categoryId: string | null): string {
@@ -54,7 +56,7 @@ export default function TransactionList({
   loading,
   error,
   onEdit,
-  onDelete,
+  onRequestDelete,
 }: TransactionListProps) {
   const [openMenuTxId, setOpenMenuTxId] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement | null>(null)
@@ -102,9 +104,9 @@ export default function TransactionList({
           tx.type,
           tx.category_id
         )
-        const fromName = getAccountName(accounts, tx.from_account_id)
-        const toName = getAccountName(accounts, tx.to_account_id)
-        const accountName = getAccountName(accounts, tx.account_id)
+        const fromName = getAccountLabel(accounts, tx.from_account_id)
+        const toName = getAccountLabel(accounts, tx.to_account_id)
+        const accountName = getAccountLabel(accounts, tx.account_id)
 
         const primaryLabel = tx.description?.trim()
           ? tx.description.trim()
@@ -200,6 +202,18 @@ export default function TransactionList({
                     {badgeLabel}
                   </span>
                 )}
+                {!isTransfer &&
+                  tx.installment_index != null &&
+                  tx.installment_count != null &&
+                  tx.installment_count > 0 && (
+                    <span
+                      className="ui-badge shrink-0"
+                      style={{ background: 'rgba(123,97,255,0.14)', color: 'var(--text-primary)' }}
+                      title="Installment plan"
+                    >
+                      {tx.installment_index}/{tx.installment_count}
+                    </span>
+                  )}
               </div>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
@@ -256,7 +270,7 @@ export default function TransactionList({
                     <button
                       type="button"
                       onClick={() => {
-                        onDelete(tx.id)
+                        onRequestDelete(tx)
                         setOpenMenuTxId(null)
                       }}
                       className="w-full text-left ui-btn ui-btn-ghost"

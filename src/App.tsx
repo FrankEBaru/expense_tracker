@@ -26,6 +26,7 @@ function App() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
   const [txMutations, setTxMutations] = useState<{
     addTransaction: (insert: TransactionInsert) => Promise<void>
+    addTransactions: (inserts: TransactionInsert[]) => Promise<void>
     updateTransaction: (id: string, update: TransactionUpdate) => Promise<void>
   } | null>(null)
   const [dark, setDark] = useState(() => {
@@ -309,6 +310,7 @@ function App() {
           onSaved={handleTransactionSaved}
           onError={showToast}
           addTransaction={txMutations.addTransaction}
+          addTransactions={txMutations.addTransactions}
           updateTransaction={txMutations.updateTransaction}
         />
       )}

@@ -78,6 +78,7 @@ function computeMonthSummary(transactions: Transaction[]) {
 
 type TransactionMutations = {
   addTransaction: (insert: import('../types/transaction').TransactionInsert) => Promise<void>
+  addTransactions: (inserts: import('../types/transaction').TransactionInsert[]) => Promise<void>
   updateTransaction: (id: string, update: import('../types/transaction').TransactionUpdate) => Promise<void>
 }
 
@@ -102,13 +103,16 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null)
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
   const [sortOption, setSortOption] = useState<SortOption>('date-desc')
+  const [installmentDeleteTx, setInstallmentDeleteTx] = useState<Transaction | null>(null)
 
   const {
     transactions,
     loading: txLoading,
     error: txError,
     deleteTransaction,
+    deleteTransactionsByInstallmentGroup,
     addTransaction,
+    addTransactions,
     updateTransaction,
   } = useTransactions(selectedMonth, selectedAccountId)
   const { categories: expenseCategories } = useCategories('expense')
@@ -135,6 +139,15 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
     [addTransaction, onAccountsRefetch, refetchBudgetTransactions]
   )
 
+  const addTransactionsAndRefresh = useCallback(
+    async (inserts: import('../types/transaction').TransactionInsert[]) => {
+      await addTransactions(inserts)
+      onAccountsRefetch?.()
+      await refetchBudgetTransactions()
+    },
+    [addTransactions, onAccountsRefetch, refetchBudgetTransactions]
+  )
+
   const updateTransactionAndRefresh = useCallback(
     async (id: string, update: import('../types/transaction').TransactionUpdate) => {
       await updateTransaction(id, update)
@@ -145,23 +158,70 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
   )
 
   useEffect(() => {
-    onMutationsReady?.({ addTransaction: addTransactionAndRefresh, updateTransaction: updateTransactionAndRefresh })
-  }, [addTransactionAndRefresh, updateTransactionAndRefresh, onMutationsReady])
+    onMutationsReady?.({
+      addTransaction: addTransactionAndRefresh,
+      addTransactions: addTransactionsAndRefresh,
+      updateTransaction: updateTransactionAndRefresh,
+    })
+  }, [addTransactionAndRefresh, addTransactionsAndRefresh, updateTransactionAndRefresh, onMutationsReady])
 
-  const handleDeleteTransaction = useCallback(
-    async (id: string) => {
-      if (!window.confirm('Delete this transaction?')) return
-      try {
-        await deleteTransaction(id)
-        onAccountsRefetch?.()
-        await refetchBudgetTransactions()
-      } catch (err) {
-        logInternalError('Dashboard.handleDeleteTransaction', err)
-        onError?.(toUserErrorMessage(err, 'Could not delete transaction.'))
+  const handleRequestDeleteTransaction = useCallback(
+    (tx: Transaction) => {
+      if (tx.installment_group_id) {
+        setInstallmentDeleteTx(tx)
+        return
       }
+      void (async () => {
+        if (!window.confirm('Delete this transaction?')) return
+        try {
+          await deleteTransaction(tx.id)
+          onAccountsRefetch?.()
+          await refetchBudgetTransactions()
+        } catch (err) {
+          logInternalError('Dashboard.handleRequestDeleteTransaction', err)
+          onError?.(toUserErrorMessage(err, 'Could not delete transaction.'))
+        }
+      })()
     },
     [deleteTransaction, onAccountsRefetch, onError, refetchBudgetTransactions]
   )
+
+  const closeInstallmentDeleteSheet = useCallback(() => setInstallmentDeleteTx(null), [])
+
+  const handleDeleteInstallmentThisOnly = useCallback(async () => {
+    if (!installmentDeleteTx) return
+    try {
+      await deleteTransaction(installmentDeleteTx.id)
+      onAccountsRefetch?.()
+      await refetchBudgetTransactions()
+    } catch (err) {
+      logInternalError('Dashboard.handleDeleteInstallmentThisOnly', err)
+      onError?.(toUserErrorMessage(err, 'Could not delete transaction.'))
+    } finally {
+      setInstallmentDeleteTx(null)
+    }
+  }, [installmentDeleteTx, deleteTransaction, onAccountsRefetch, onError, refetchBudgetTransactions])
+
+  const handleDeleteInstallmentAll = useCallback(async () => {
+    if (!installmentDeleteTx?.installment_group_id) return
+    if (!window.confirm('Delete every month in this installment plan? This cannot be undone.')) return
+    try {
+      await deleteTransactionsByInstallmentGroup(installmentDeleteTx.installment_group_id)
+      onAccountsRefetch?.()
+      await refetchBudgetTransactions()
+    } catch (err) {
+      logInternalError('Dashboard.handleDeleteInstallmentAll', err)
+      onError?.(toUserErrorMessage(err, 'Could not delete installment plan.'))
+    } finally {
+      setInstallmentDeleteTx(null)
+    }
+  }, [
+    installmentDeleteTx,
+    deleteTransactionsByInstallmentGroup,
+    onAccountsRefetch,
+    onError,
+    refetchBudgetTransactions,
+  ])
 
   const prevMonth = () => {
     const [y, m] = selectedMonth.split('-').map(Number)
@@ -245,7 +305,14 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
               </li>
               {accounts.map((acc, idx) => {
                 const balance = (acc as AccountWithBalance).balance
-                const balanceStr = acc.hide_balance ? '•••' : `$${formatCurrency(balance)}`
+                const balanceDisplay: { text: string; color?: string } = (() => {
+                  if (acc.hide_balance) return { text: '•••' }
+                  const neg = balance < 0
+                  const body = `$${formatCurrency(Math.abs(balance))}`
+                  const text = neg ? `-${body}` : body
+                  const color = neg ? 'var(--text-negative)' : 'var(--text-primary)'
+                  return { text, color }
+                })()
                 const AccountIcon = resolveAccountType(acc) === 'credit_card' ? IconCreditCard : IconBank
                 return (
                   <li key={acc.id}>
@@ -287,7 +354,15 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
                           {accountSelectLabel(acc)}
                         </span>
                       </span>
-                      <span className="shrink-0" style={{ fontVariantNumeric: 'tabular-nums' }}>{balanceStr}</span>
+                      <span
+                        className="shrink-0"
+                        style={{
+                          fontVariantNumeric: 'tabular-nums',
+                          ...(balanceDisplay.color ? { color: balanceDisplay.color } : {}),
+                        }}
+                      >
+                        {balanceDisplay.text}
+                      </span>
                     </button>
                   </li>
                 )
@@ -483,9 +558,79 @@ export default function Dashboard({ accounts, accountsLoading, accountsError, on
           loading={txLoading}
           error={txError}
           onEdit={onEditTransaction}
-          onDelete={handleDeleteTransaction}
+          onRequestDelete={handleRequestDeleteTransaction}
         />
       </section>
+
+      {installmentDeleteTx && (
+        <div
+          className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="installment-delete-title"
+        >
+          <div className="ui-sheet w-full max-w-md">
+            <div
+              className="flex items-center justify-between"
+              style={{ padding: 16, borderBottom: '1px solid var(--border-softer)' }}
+            >
+              <h2 id="installment-delete-title" style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)' }}>
+                Delete installment?
+              </h2>
+              <button
+                type="button"
+                onClick={closeInstallmentDeleteSheet}
+                className="ui-btn ui-btn-ghost"
+                style={{ minHeight: 36, width: 40, padding: 0, textTransform: 'none', letterSpacing: 0 }}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-4" style={{ padding: 16 }}>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                This expense is part of a multi-month plan
+                {installmentDeleteTx.installment_index != null && installmentDeleteTx.installment_count != null
+                  ? ` (${installmentDeleteTx.installment_index}/${installmentDeleteTx.installment_count}).`
+                  : '.'}{' '}
+                Delete only this month, or remove every month in this plan.
+              </p>
+              <div className="flex flex-col gap-2 safe-bottom">
+                <button
+                  type="button"
+                  className="ui-btn ui-btn-secondary"
+                  style={{ minHeight: 44, textTransform: 'none', letterSpacing: 0 }}
+                  onClick={() => void handleDeleteInstallmentThisOnly()}
+                >
+                  Delete this month only
+                </button>
+                <button
+                  type="button"
+                  className="ui-btn ui-btn-primary"
+                  style={{
+                    minHeight: 44,
+                    textTransform: 'none',
+                    letterSpacing: 0,
+                    background: 'var(--text-negative)',
+                    borderColor: 'var(--text-negative)',
+                  }}
+                  onClick={() => void handleDeleteInstallmentAll()}
+                >
+                  Delete entire plan
+                </button>
+                <button
+                  type="button"
+                  className="ui-btn ui-btn-ghost"
+                  style={{ minHeight: 44, textTransform: 'none', letterSpacing: 0 }}
+                  onClick={closeInstallmentDeleteSheet}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
