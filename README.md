@@ -45,6 +45,8 @@ A personal finance web app: track income and expenses, multiple accounts, transf
 4. **Run the database schema**  
    In **SQL Editor**, run the contents of `supabase/migration_full_finance.sql`. It creates `accounts`, `categories`, and `transactions` (and migrates from the old `expenses` table if present). For a brand-new project with no existing data, the same file works and the app will create a default account and categories on first login.
 
+   Then run any incremental SQL in `supabase/` your project needs (e.g. `add_hide_balance.sql`, `add_account_type_and_installments.sql` for **credit card accounts** and **installment** metadata on transactions).
+
 After that, use **Authentication → Users** to create a user (or sign up from the app).
 
 ## How to deploy
